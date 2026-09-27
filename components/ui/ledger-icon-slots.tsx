@@ -1,5 +1,5 @@
-import { ControlGlyph } from "@/app/design-system/iconography";
 import type { ControlGlyphProps } from "@/app/design-system/iconography";
+import { ControlGlyph } from "@/app/design-system/iconography";
 
 type SlotProps = Omit<ControlGlyphProps, "name">;
 

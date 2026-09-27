@@ -30,3 +30,4 @@ next-env.d.ts
 
 # generated visual acceptance evidence
 /artifacts/visual-acceptance/
+/artifacts/preview/

@@ -4,8 +4,9 @@ import "./globals.css";
 // JavaScript-safe tokens, not the raw ones: project purpose is free text, so a quote
 // or backslash interpolated into a string literal closes it early and the
 // provisioned project fails its first build.
-const title = "itch-prep-sim";
-const description = "ITCHATHON Challenge 4 restaurant prep forecasting and Jev simulation prototype";
+const title = "Prep Decision Lab";
+const description =
+  "Restaurant prep forecasting and Jev decision simulation for ITCHATHON Challenge 4";
 
 function siteUrl(): URL {
   const configured =
