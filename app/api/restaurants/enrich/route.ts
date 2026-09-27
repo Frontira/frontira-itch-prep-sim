@@ -47,6 +47,9 @@ export async function POST(request: Request) {
         maxCrawledPlacesPerSearch: 1,
         scrapePlaceDetailPage: true,
         maxReviews: 0,
+        scrapeReviewsPersonalData: false,
+        scrapeContacts: false,
+        maximumLeadsEnrichmentRecords: 0,
         language: "en",
       }
     : {
@@ -54,6 +57,9 @@ export async function POST(request: Request) {
         maxCrawledPlacesPerSearch: 1,
         scrapePlaceDetailPage: true,
         maxReviews: 0,
+        scrapeReviewsPersonalData: false,
+        scrapeContacts: false,
+        maximumLeadsEnrichmentRecords: 0,
         language: "en",
       };
 

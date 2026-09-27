@@ -76,3 +76,21 @@ test("external signals produce explainable item-level contributions", () => {
   assert.ok(gnocchi.contributions.trends > 0);
   assert.ok(gnocchi.contributions.events > 0);
 });
+
+test("venue activity acts as a bounded cover prior with an explicit dish contribution", () => {
+  const inputs = {
+    covers: 100,
+    weatherUplift: 0,
+    trendUplift: 0,
+    eventUplift: 0,
+    noShowRate: 0,
+    safetyStock: 10,
+    seed: 11,
+  };
+  const baseline = simulatePrep(inputs);
+  const venueBusy = simulatePrep({ ...inputs, venueUplift: 8 });
+  const gnocchi = venueBusy.recommendations.find((item) => item.id === "gnocchi");
+  assert.ok(venueBusy.effectiveCovers > baseline.effectiveCovers);
+  assert.ok(gnocchi);
+  assert.ok(gnocchi.contributions.venue > 0);
+});

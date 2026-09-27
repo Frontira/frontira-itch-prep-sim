@@ -3,6 +3,7 @@ export type ScenarioInputs = {
   weatherUplift: number;
   trendUplift: number;
   eventUplift: number;
+  venueUplift?: number;
   noShowRate: number;
   safetyStock: number;
   runs?: number;
@@ -42,6 +43,7 @@ export type PrepRecommendation = MenuItem & {
     weather: number;
     trends: number;
     events: number;
+    venue: number;
   };
 };
 
@@ -189,7 +191,8 @@ export function simulatePrep(inputs: ScenarioInputs, menu = DEMO_MENU): Simulati
   const bookedCovers = Math.max(0, inputs.covers * (1 - inputs.noShowRate / 100));
   const expectedCovers = Math.max(
     0,
-    bookedCovers * (1 + inputs.weatherUplift / 100 + inputs.eventUplift / 100),
+    bookedCovers *
+      (1 + inputs.weatherUplift / 100 + inputs.eventUplift / 100 + (inputs.venueUplift ?? 0) / 100),
   );
   const coverOutcomes = Array.from({ length: runs }, () => {
     const serviceShock = normal(random) * 0.055;
@@ -206,9 +209,14 @@ export function simulatePrep(inputs: ScenarioInputs, menu = DEMO_MENU): Simulati
       bookedDemand * (inputs.weatherUplift / 100) * item.weatherSensitivity;
     const trendContribution = bookedDemand * (inputs.trendUplift / 100) * item.trendSensitivity;
     const eventContribution = bookedDemand * (inputs.eventUplift / 100) * item.eventSensitivity;
+    const venueContribution = bookedDemand * ((inputs.venueUplift ?? 0) / 100);
     const demandMean = Math.max(
       0,
-      bookedDemand + weatherContribution + trendContribution + eventContribution,
+      bookedDemand +
+        weatherContribution +
+        trendContribution +
+        eventContribution +
+        venueContribution,
     );
     const demands = Array.from({ length: runs }, () => {
       const sharedServiceShock = normal(random) * 0.1;
@@ -244,6 +252,7 @@ export function simulatePrep(inputs: ScenarioInputs, menu = DEMO_MENU): Simulati
         weather: round(weatherContribution),
         trends: round(trendContribution),
         events: round(eventContribution),
+        venue: round(venueContribution),
       },
     };
   });

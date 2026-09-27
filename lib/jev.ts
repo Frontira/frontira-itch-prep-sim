@@ -73,7 +73,7 @@ export async function evaluatePrepDecision(state: unknown): Promise<JevDecision>
         signalConfidence: {
           type: "score",
           instructions:
-            "Rate how credible and decision-relevant the combined booking, weather, search-trend and event evidence is.",
+            "Rate how credible and decision-relevant the combined booking, weather, search-trend, event, and venue-activity evidence is. Treat Maps popularity as a weak traffic prior, not observed sales.",
           criteria: ["Weak", "Directional", "Useful", "Strong"],
         },
         ...itemQuestions,

@@ -3,6 +3,8 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { ControlGlyph } from "@/app/design-system/iconography";
 import { Button } from "@/components/ui/button";
+import { type SelectedVenue, VenueConnector } from "@/components/venue-connector";
+import { dinnerPopularityEffect, type VenueActivity } from "@/lib/apify";
 import type { JevDecision } from "@/lib/jev";
 import {
   type PrepRecommendation,
@@ -36,6 +38,7 @@ const initialInputs: ScenarioInputs = {
   weatherUplift: 0,
   trendUplift: 0,
   eventUplift: 12,
+  venueUplift: 0,
   noShowRate: 6,
   safetyStock: 12,
   runs: 10_000,
@@ -98,6 +101,7 @@ function SignalCard({
   enabled,
   onToggle,
   tone = "neutral",
+  disabled = false,
   children,
 }: {
   title: string;
@@ -107,6 +111,7 @@ function SignalCard({
   enabled: boolean;
   onToggle: () => void;
   tone?: "neutral" | "live" | "demo";
+  disabled?: boolean;
   children?: React.ReactNode;
 }) {
   return (
@@ -124,6 +129,7 @@ function SignalCard({
           aria-checked={enabled}
           aria-label={`${enabled ? "Exclude" : "Include"} ${title}`}
           onClick={onToggle}
+          disabled={disabled}
           className={`flex min-h-10 min-w-[112px] shrink-0 items-center justify-between gap-2 rounded-md border px-2.5 py-2 font-mono text-[9px] uppercase tracking-[.08em] transition-colors ${
             enabled ? "border-ok/70 bg-ok-wash text-ok" : "border-line bg-bg text-text-2"
           }`}
@@ -183,6 +189,7 @@ function ProbabilityBars({ probabilities }: { probabilities: Record<string, numb
 
 type HorizonPlan = {
   weather: WeatherSignal | null;
+  venueEffect: number | null;
   inputs: ScenarioInputs;
   result: SimulationResult;
 };
@@ -208,11 +215,13 @@ function ThreeDayRunway({
   plans,
   selectedItem,
   selectedDay,
+  hasVenueActivity,
   onSelect,
 }: {
   plans: HorizonPlan[];
   selectedItem: string;
   selectedDay: number;
+  hasVenueActivity: boolean;
   onSelect: (index: number) => void;
 }) {
   const recommendations = plans.map(
@@ -316,6 +325,13 @@ function ThreeDayRunway({
                   <span>Median {distribution?.p50 ?? "—"}</span>
                   <span>P90 {distribution?.p90 ?? "—"}</span>
                 </div>
+                {hasVenueActivity ? (
+                  <p className="mt-2 font-mono text-[9px] text-ok">
+                    {plan.venueEffect === null
+                      ? "No Maps dinner sample"
+                      : `Maps traffic prior ${plan.venueEffect > 0 ? "+" : ""}${plan.venueEffect}%`}
+                  </p>
+                ) : null}
               </div>
             </button>
           );
@@ -414,35 +430,52 @@ function DemandDistribution({
 
 export default function Home() {
   const [draft, setDraft] = useState(initialInputs);
+  const [venue, setVenue] = useState<SelectedVenue | null>(null);
+  const [activity, setActivity] = useState<VenueActivity | null>(null);
   const [weatherHorizon, setWeatherHorizon] = useState<WeatherSignal[]>([]);
   const [weatherError, setWeatherError] = useState(false);
   const [trends, setTrends] = useState<TrendsSignal>(localTrendsSnapshot);
-  const [signals, setSignals] = useState({ weather: true, trends: true, events: true });
+  const [trendsScope, setTrendsScope] = useState<"demo" | "venue">("demo");
+  const [signals, setSignals] = useState({
+    weather: true,
+    trends: true,
+    events: true,
+    venue: false,
+  });
   const [decision, setDecision] = useState<JevDecision | null>(null);
   const [summary, setSummary] = useState<{ summary: string; source: string } | null>(null);
   const [deciding, setDeciding] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedItem, setSelectedItem] = useState("gnocchi");
   const [trendsError, setTrendsError] = useState<string | null>(null);
+  const activeLatitude = venue?.latitude ?? serviceLocation.latitude;
+  const activeLongitude = venue?.longitude ?? serviceLocation.longitude;
+  const trendsReady = !venue || trendsScope === "venue";
   const horizonWeather = weatherHorizon.length > 0 ? weatherHorizon : EMPTY_WEATHER_HORIZON;
   const horizonPlans = useMemo(
     () =>
       horizonWeather.map((weather, index) => {
+        const venueEffect =
+          venue && activity && weather
+            ? dinnerPopularityEffect(activity, weather.serviceDate)
+            : null;
         const inputs: ScenarioInputs = {
           ...draft,
           weatherUplift: signals.weather ? (weather?.coverEffect ?? 0) : 0,
-          trendUplift: signals.trends ? trends.momentum : 0,
+          trendUplift: signals.trends && trendsReady ? trends.momentum : 0,
           eventUplift: signals.events ? draft.eventUplift : 0,
+          venueUplift: signals.venue ? (venueEffect ?? 0) : 0,
           seed: 42 + index,
         };
-        return { weather, inputs, result: simulatePrep(inputs) };
+        return { weather, venueEffect, inputs, result: simulatePrep(inputs) };
       }),
-    [draft, horizonWeather, signals, trends.momentum],
+    [draft, horizonWeather, signals, trends.momentum, trendsReady, venue, activity],
   );
   const selectedPlan = horizonPlans[selectedDay] ?? horizonPlans[0];
   const weather = selectedPlan?.weather ?? null;
   const result = selectedPlan?.result ?? simulatePrep(initialInputs);
   const selectedDateLabel = formatServiceDate(weather?.serviceDate, selectedDay);
+  const selectedVenueEffect = selectedPlan?.venueEffect ?? null;
   const savings = Math.max(0, result.baselineWasteCost - result.projectedWasteCost);
   const selectedRecommendation =
     result.recommendations.find((item) => item.id === selectedItem) ?? result.recommendations[0];
@@ -450,12 +483,11 @@ export default function Home() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(
-      `/api/signals/weather?latitude=${serviceLocation.latitude}&longitude=${serviceLocation.longitude}`,
-      {
-        signal: controller.signal,
-      },
-    )
+    setWeatherHorizon([]);
+    setWeatherError(false);
+    fetch(`/api/signals/weather?latitude=${activeLatitude}&longitude=${activeLongitude}`, {
+      signal: controller.signal,
+    })
       .then((response) => {
         if (!response.ok) throw new Error("Weather unavailable");
         return response.json() as Promise<WeatherHorizon>;
@@ -471,7 +503,30 @@ export default function Home() {
         setWeatherError(true);
       });
     return () => controller.abort();
-  }, []);
+  }, [activeLatitude, activeLongitude]);
+
+  function selectVenue(next: SelectedVenue | null) {
+    const samePlace = Boolean(venue && next && venue.placeId === next.placeId);
+    setVenue(next);
+    if (!samePlace) {
+      setTrendsScope("demo");
+      setSignals((current) => ({
+        ...current,
+        trends: !next,
+        events: !next,
+        venue: false,
+      }));
+    }
+    setDecision(null);
+    setSummary(null);
+  }
+
+  function updateActivity(next: VenueActivity | null) {
+    setActivity(next);
+    setSignals((current) => ({ ...current, venue: Boolean(next?.popularTimes.length) }));
+    setDecision(null);
+    setSummary(null);
+  }
 
   function updateDraft(next: ScenarioInputs) {
     setDraft(next);
@@ -500,10 +555,20 @@ export default function Home() {
         inputs: nextInputs,
         signals: {
           weather: signals.weather ? weather : null,
-          trends: signals.trends ? trends : null,
+          trends: signals.trends && trendsReady ? trends : null,
           event: signals.events
             ? { source: "Operator input", uplift: draft.eventUplift, confidence: 0.5 }
             : null,
+          venue:
+            signals.venue && venue && activity && selectedVenueEffect !== null
+              ? {
+                  source: activity.source,
+                  placeId: venue.placeId,
+                  observedAt: activity.observedAt,
+                  dinnerPopularityEffect: selectedVenueEffect,
+                  confidence: 0.25,
+                }
+              : null,
         },
         result: nextResult,
       };
@@ -531,6 +596,8 @@ export default function Home() {
     try {
       const signal = parseGoogleTrendsCsv(await file.text(), file.name.replace(/\.csv$/i, ""));
       setTrends(signal);
+      setTrendsScope(venue ? "venue" : "demo");
+      setSignals((current) => ({ ...current, trends: true }));
       setTrendsError(null);
       setDecision(null);
       setSummary(null);
@@ -555,7 +622,9 @@ export default function Home() {
             </div>
           </div>
           <div className="rounded-full border border-line px-3 py-1 font-mono text-[10px] uppercase tracking-[.14em] text-text-2">
-            Demo location · San Francisco city center
+            {venue
+              ? `Connected venue · ${venue.name}`
+              : "Demo location · San Francisco city center"}
           </div>
         </div>
       </header>
@@ -616,7 +685,9 @@ export default function Home() {
             <Button className="w-full" onClick={runScenario} disabled={deciding}>
               {deciding ? "Jev is evaluating…" : "Evaluate selected day with Jev"}
             </Button>
-            <p data-ledger-message>Daily replenishment · zero carryover · synthetic menu</p>
+            <p data-ledger-message>
+              Daily replenishment · zero carryover · synthetic menu and booked covers
+            </p>
           </section>
 
           {decision ? (
@@ -649,10 +720,17 @@ export default function Home() {
         </aside>
 
         <section className="space-y-5">
+          <VenueConnector
+            venue={venue}
+            activity={activity}
+            onVenueChange={selectVenue}
+            onActivityChange={updateActivity}
+          />
           <ThreeDayRunway
             plans={horizonPlans}
             selectedItem={selectedItem}
             selectedDay={selectedDay}
+            hasVenueActivity={Boolean(venue && activity && signals.venue)}
             onSelect={selectDay}
           />
 
@@ -668,14 +746,14 @@ export default function Home() {
                 Toggle any source off and see its counterfactual effect immediately.
               </p>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
               <SignalCard
                 title="Dinner weather"
                 source={weatherError ? "Open-Meteo unavailable" : "Open-Meteo · live forecast"}
                 value={weather ? `${weather.temperatureF}°F` : "Loading…"}
                 detail={
                   weather
-                    ? `${weather.rainProbability}% rain · ${weather.windGustMph} mph gusts · ${weather.coverEffect}% cover effect · ${serviceLocation.latitude}, ${serviceLocation.longitude}`
+                    ? `${weather.rainProbability}% rain · ${weather.windGustMph} mph gusts · ${weather.coverEffect}% cover effect · ${activeLatitude}, ${activeLongitude}`
                     : "Fetching three 17:00–22:00 service windows."
                 }
                 enabled={signals.weather}
@@ -684,22 +762,33 @@ export default function Home() {
               />
               <SignalCard
                 title="Search momentum"
-                source="Google Trends · local DMA snapshot"
-                value={`${trends.momentum > 0 ? "+" : ""}${trends.momentum}%`}
-                detail={`${trends.geography} · ${trends.recentIndex} recent index vs ${trends.baselineIndex} baseline · ${trends.observations} observations`}
-                enabled={signals.trends}
+                source={
+                  trendsReady
+                    ? "Google Trends · local DMA snapshot"
+                    : "Venue-specific Trends needed"
+                }
+                value={trendsReady ? `${trends.momentum > 0 ? "+" : ""}${trends.momentum}%` : "—"}
+                detail={
+                  trendsReady
+                    ? `${trends.geography} · ${trends.recentIndex} recent index vs ${trends.baselineIndex} baseline · ${trends.observations} observations`
+                    : "The San Francisco demo snapshot is excluded. Import a local CSV for this venue."
+                }
+                enabled={signals.trends && trendsReady}
                 onToggle={() => updateSignals({ ...signals, trends: !signals.trends })}
-                tone="live"
+                disabled={!trendsReady}
+                tone={trendsReady ? "live" : "neutral"}
               >
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line/60 pt-3 font-mono text-[9px] uppercase tracking-[.1em]">
-                  <a
-                    href={serviceLocation.trendsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-ok underline-offset-4 hover:underline"
-                  >
-                    View local evidence
-                  </a>
+                  {!venue ? (
+                    <a
+                      href={serviceLocation.trendsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-ok underline-offset-4 hover:underline"
+                    >
+                      View local evidence
+                    </a>
+                  ) : null}
                   <label className="cursor-pointer text-ok underline-offset-4 hover:underline">
                     Import updated CSV
                     <input
@@ -710,9 +799,11 @@ export default function Home() {
                     />
                   </label>
                 </div>
-                <p className="mt-2 font-mono text-[9px] text-text-2">
-                  {trends.label} · {trends.comparison} · {trends.period}
-                </p>
+                {trendsReady ? (
+                  <p className="mt-2 font-mono text-[9px] text-text-2">
+                    {trends.label} · {trends.comparison} · {trends.period}
+                  </p>
+                ) : null}
                 {trendsError ? <p className="mt-2 text-xs text-err">{trendsError}</p> : null}
               </SignalCard>
               <SignalCard
@@ -723,6 +814,30 @@ export default function Home() {
                 enabled={signals.events}
                 onToggle={() => updateSignals({ ...signals, events: !signals.events })}
                 tone="demo"
+              />
+              <SignalCard
+                title="Venue activity"
+                source={
+                  activity ? "Apify · Google Maps popular times" : "Connect a restaurant above"
+                }
+                value={
+                  activity && venue && weather
+                    ? selectedVenueEffect === null
+                      ? "No data"
+                      : `${selectedVenueEffect > 0 ? "+" : ""}${selectedVenueEffect}%`
+                    : "—"
+                }
+                detail={
+                  activity && venue && weather
+                    ? selectedVenueEffect === null
+                      ? "No dinner-hours popularity sample for this weekday; this source is excluded."
+                      : "Dinner traffic relative to this venue's weekly pattern. Bounded to ±15% as a weak cover prior."
+                    : "Load a real venue's Maps activity to compare each service day."
+                }
+                enabled={signals.venue && selectedVenueEffect !== null}
+                onToggle={() => updateSignals({ ...signals, venue: !signals.venue })}
+                disabled={!activity?.popularTimes.length || !venue || selectedVenueEffect === null}
+                tone={activity && venue && selectedVenueEffect !== null ? "live" : "neutral"}
               />
             </div>
           </div>
@@ -854,12 +969,13 @@ export default function Home() {
                   Why this quantity?
                 </p>
                 <h3 className="mt-2 font-serif text-3xl">{selectedRecommendation.name}</h3>
-                <div className="mt-6 grid gap-3 sm:grid-cols-4">
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                   {[
                     ["Booked demand", selectedRecommendation.contributions.bookedDemand],
                     ["Weather", selectedRecommendation.contributions.weather],
                     ["Search trends", selectedRecommendation.contributions.trends],
                     ["Events", selectedRecommendation.contributions.events],
+                    ["Venue", selectedRecommendation.contributions.venue],
                   ].map(([label, contribution]) => (
                     <div key={String(label)} className="rounded-md border border-line p-3">
                       <p className="font-mono text-[9px] uppercase tracking-[.12em] text-text-2">

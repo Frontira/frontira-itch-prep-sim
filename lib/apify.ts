@@ -13,7 +13,9 @@ export type VenueActivity = {
   placeId: string;
   observedAt: string;
   title?: string;
+  category?: string;
   address?: string;
+  menuUrl?: string;
   latitude?: number;
   longitude?: number;
   rating?: number;
@@ -35,6 +37,16 @@ function finiteNumber(value: unknown): number | undefined {
     if (Number.isFinite(parsed)) return parsed;
   }
   return undefined;
+}
+
+function safeExternalUrl(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function firstNumber(record: JsonRecord, keys: string[]): number | undefined {
@@ -120,7 +132,9 @@ export function normalizeVenueActivity(
   const rating = firstNumber(raw, ["totalScore", "rating"]);
   const reviewCount = firstNumber(raw, ["reviewsCount", "reviewCount"]);
   const title = typeof raw.title === "string" ? raw.title : undefined;
+  const category = typeof raw.categoryName === "string" ? raw.categoryName : undefined;
   const address = typeof raw.address === "string" ? raw.address : undefined;
+  const menuUrl = safeExternalUrl(raw.menu);
   const location = isRecord(raw.location) ? raw.location : undefined;
   const latitude = location ? finiteNumber(location.lat) : undefined;
   const longitude = location ? finiteNumber(location.lng) : undefined;
@@ -135,7 +149,9 @@ export function normalizeVenueActivity(
     placeId,
     observedAt: actorObservedAt,
     ...(title ? { title } : {}),
+    ...(category ? { category } : {}),
     ...(address ? { address } : {}),
+    ...(menuUrl ? { menuUrl } : {}),
     ...(latitude === undefined ? {} : { latitude }),
     ...(longitude === undefined ? {} : { longitude }),
     ...(rating === undefined ? {} : { rating }),
