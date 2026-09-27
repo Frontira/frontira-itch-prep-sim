@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { VenueActivity } from "@/lib/apify";
+import type { DishMatch } from "@/lib/dish-identification";
 import type { RestaurantPlace } from "@/lib/places";
+import { JOHNS_GRILL_PLACE_ID } from "@/lib/venue-menu";
 
 export type SelectedVenue = {
   placeId: string;
@@ -24,6 +26,7 @@ type Props = {
   onVenueChange: (venue: SelectedVenue | null) => void;
   onActivityChange: (activity: VenueActivity | null) => void;
   onUseReviewTopic: (topic: string) => void;
+  onSelectDish: (id: string) => void;
 };
 
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -43,6 +46,7 @@ export function VenueConnector({
   onVenueChange,
   onActivityChange,
   onUseReviewTopic,
+  onSelectDish,
 }: Props) {
   const [query, setQuery] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
@@ -51,6 +55,9 @@ export function VenueConnector({
   const [enriching, setEnriching] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [activityMessage, setActivityMessage] = useState<string | null>(null);
+  const [dishMatches, setDishMatches] = useState<DishMatch[] | null>(null);
+  const [identifyingDishes, setIdentifyingDishes] = useState(false);
+  const [dishError, setDishError] = useState<string | null>(null);
   const daily = activity ? weekdays.map((day) => ({ day, value: dinnerMean(activity, day) })) : [];
   const activityAgeDays = activity
     ? Math.floor((Date.now() - Date.parse(activity.observedAt)) / 86_400_000)
@@ -82,6 +89,8 @@ export function VenueConnector({
     onVenueChange(place);
     onActivityChange(null);
     setActivityMessage(null);
+    setDishMatches(null);
+    setDishError(null);
     setMatches([]);
     setMessage(null);
     void enrich(place.googleMapsUrl, place.placeId, place);
@@ -90,6 +99,8 @@ export function VenueConnector({
   async function enrich(googleMapsUrl: string, placeId?: string, selected?: SelectedVenue) {
     setEnriching(true);
     setActivityMessage(null);
+    setDishMatches(null);
+    setDishError(null);
     onActivityChange(null);
     try {
       const response = await fetch("/api/restaurants/enrich", {
@@ -131,6 +142,30 @@ export function VenueConnector({
       setActivityMessage(error instanceof Error ? error.message : "Maps activity is unavailable");
     } finally {
       setEnriching(false);
+    }
+  }
+
+  async function identifyDishes() {
+    if (!venue || !activity) return;
+    setIdentifyingDishes(true);
+    setDishError(null);
+    try {
+      const response = await fetch("/api/restaurants/identify-dishes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          placeId: venue.placeId,
+          reviewTopics: activity.reviewTopics.slice(0, 12),
+        }),
+      });
+      const data = (await response.json()) as { matches?: DishMatch[]; error?: string };
+      if (!response.ok || !Array.isArray(data.matches))
+        throw new Error(data.error ?? "Jev could not identify dishes");
+      setDishMatches(data.matches);
+    } catch (error) {
+      setDishError(error instanceof Error ? error.message : "Jev could not identify dishes");
+    } finally {
+      setIdentifyingDishes(false);
     }
   }
 
@@ -238,6 +273,8 @@ export function VenueConnector({
                 onVenueChange(null);
                 onActivityChange(null);
                 setActivityMessage(null);
+                setDishMatches(null);
+                setDishError(null);
               }}
               className="ml-4 text-xs text-text-2 underline-offset-4 hover:underline"
             >
@@ -364,6 +401,62 @@ export function VenueConnector({
                 You choose which topics are actual dishes. Mention counts never set order shares or
                 forecast quantities.
               </p>
+            </div>
+          ) : null}
+          {venue?.placeId === JOHNS_GRILL_PLACE_ID && activity.reviewTopics.length > 0 ? (
+            <div className="mt-5 rounded-md border border-ok/40 bg-ok-wash/40 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-mono text-[9px] uppercase tracking-[.14em] text-ok">
+                    Jev · menu reconciliation
+                  </p>
+                  <p className="mt-1 text-xs text-text-2">
+                    Match guest topics to published dishes; filter music and seating. No topic count
+                    becomes a sales estimate.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void identifyDishes()}
+                  disabled={identifyingDishes}
+                  className="rounded-md border border-ok px-3 py-2 text-xs text-ok disabled:opacity-50"
+                >
+                  {identifyingDishes ? "Jev is checking…" : "Identify dishes with Jev"}
+                </button>
+              </div>
+              {dishError ? (
+                <p className="mt-3 text-xs text-warn" role="status">
+                  {dishError}
+                </p>
+              ) : null}
+              {dishMatches ? (
+                <div className="mt-4 grid gap-2 sm:grid-cols-2" data-testid="jev-dish-matches">
+                  {dishMatches.map((match) => (
+                    <div
+                      key={match.topic}
+                      className="rounded-md border border-line bg-bg-raised p-3"
+                    >
+                      <p className="font-mono text-[9px] uppercase tracking-[.12em] text-text-2">
+                        {match.topic} · {match.mentions} guest mentions
+                      </p>
+                      {match.status === "matched" && match.menuId ? (
+                        <button
+                          type="button"
+                          onClick={() => onSelectDish(match.menuId ?? "")}
+                          className="mt-2 text-left text-sm font-semibold text-ok underline-offset-2 hover:underline"
+                        >
+                          {match.menuName} · {Math.round(match.confidence * 100)}% match
+                        </button>
+                      ) : (
+                        <p className="mt-2 text-xs text-text-2">
+                          {match.status === "not_dish" ? "Not a dish" : "Needs operator review"} ·{" "}
+                          {Math.round(match.confidence * 100)}% confidence
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>

@@ -27,6 +27,8 @@ The morning card puts all six prep quantities ahead of the detailed charts and e
 
 For the John’s Grill demo, its Google Maps Place ID loads six dish names checked against the restaurant’s [published January 2026 dinner menu](https://www.johnsgrill.com/menu/dinner-menu-1/). Apify supplies venue identity, hours and guest-mentioned topics, but did not expose popular times on the September 27 import. The scenario’s orders per 100 covers, current pars and waste costs are editable illustrative values, not John’s Grill sales or purchasing records. The three-day weather forecast comes from Open-Meteo for the restaurant’s coordinates.
 
+The John’s Grill connection can also run a bounded Jev dish-identification step. One typed batch compares up to twelve Apify review topics with the six published menu dishes, labels non-food topics, and sends low-confidence or unmatched topics for operator review. A match can focus its existing prep row; it does not change the assumed order share. This explicit action requires `JEV_API_KEY` in the server environment and never exposes that key to the browser. It does not invent menu items, infer sales from review counts, or validate that the published menu has not changed.
+
 ## Social preview ownership
 
 The scaffold includes canonical Open Graph and Twitter large-card metadata plus

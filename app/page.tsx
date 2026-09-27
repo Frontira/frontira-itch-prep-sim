@@ -816,6 +816,7 @@ export default function Home() {
             onVenueChange={selectVenue}
             onActivityChange={updateActivity}
             onUseReviewTopic={(topic) => updateMenuItem(selectedItem, { name: topic })}
+            onSelectDish={setSelectedItem}
           />
           <section
             data-testid="morning-card"
