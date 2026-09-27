@@ -25,6 +25,8 @@ Selecting a place automatically imports its detail record and changes the three-
 
 The morning card puts all six prep quantities ahead of the detailed charts and exposes the operator's waste-versus-sellout preference as three presets. Presets change the simulation's target quantile; they are not learned cost-optimal policies. There is not yet a measured under-one-minute test against a clipboard par sheet.
 
+For the John’s Grill demo, its Google Maps Place ID loads six dish names checked against the restaurant’s [published January 2026 dinner menu](https://www.johnsgrill.com/menu/dinner-menu-1/). Apify supplies venue identity, hours and guest-mentioned topics, but did not expose popular times on the September 27 import. The scenario’s orders per 100 covers, current pars and waste costs are editable illustrative values, not John’s Grill sales or purchasing records. The three-day weather forecast comes from Open-Meteo for the restaurant’s coordinates.
+
 ## Social preview ownership
 
 The scaffold includes canonical Open Graph and Twitter large-card metadata plus

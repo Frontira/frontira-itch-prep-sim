@@ -15,6 +15,7 @@ import {
   simulatePrep,
 } from "@/lib/simulation";
 import { parseGoogleTrendsCsv, type TrendsSignal } from "@/lib/trends";
+import { JOHNS_GRILL_MENU_URL, JOHNS_GRILL_PLACE_ID, scenarioMenuForVenue } from "@/lib/venue-menu";
 import type { WeatherHorizon, WeatherSignal } from "@/lib/weather";
 
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -510,12 +511,15 @@ export default function Home() {
             Number.isFinite(record.venue.longitude)
           ) {
             setVenue(record.venue);
+            const venueMenu = scenarioMenuForVenue(record.venue.placeId) ?? DEMO_MENU;
+            setMenu(venueMenu);
+            setSelectedItem(venueMenu[0]?.id ?? "gnocchi");
             if (
               Array.isArray(record.menu) &&
-              record.menu.length === DEMO_MENU.length &&
+              record.menu.length === venueMenu.length &&
               record.menu.every(
                 (item, index) =>
-                  item?.id === DEMO_MENU[index]?.id &&
+                  item?.id === venueMenu[index]?.id &&
                   typeof item.name === "string" &&
                   Number.isFinite(item.orderShare) &&
                   Number.isFinite(item.baselinePar) &&
@@ -591,8 +595,9 @@ export default function Home() {
     const samePlace = Boolean(venue && next && venue.placeId === next.placeId);
     setVenue(next);
     if (!samePlace) {
-      setMenu(DEMO_MENU);
-      setSelectedItem("gnocchi");
+      const nextMenu = (next && scenarioMenuForVenue(next.placeId)) || DEMO_MENU;
+      setMenu(nextMenu);
+      setSelectedItem(nextMenu[0]?.id ?? "gnocchi");
       setTrendsScope("demo");
       setSignals((current) => ({
         ...current,
@@ -828,6 +833,20 @@ export default function Home() {
                   {venue ? `${venue.name} · real venue context` : "San Francisco demo venue"} ·{" "}
                   {number.format(result.effectiveCovers)} expected covers
                 </p>
+                {venue?.placeId === JOHNS_GRILL_PLACE_ID ? (
+                  <p className="mt-2 text-xs text-text-2">
+                    Dish names from{" "}
+                    <a
+                      href={JOHNS_GRILL_MENU_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-ok underline underline-offset-2"
+                    >
+                      John’s Grill’s published dinner menu
+                    </a>
+                    . Shares, pars and waste costs are editable assumptions.
+                  </p>
+                ) : null}
               </div>
               <span className="rounded-full border border-warn/60 bg-warn-wash px-3 py-1 font-mono text-[9px] uppercase tracking-[.1em] text-warn">
                 Illustrative demand, not POS history
@@ -927,7 +946,9 @@ export default function Home() {
                 />
               </div>
               <p className="mt-3 font-mono text-[9px] uppercase tracking-[.1em] text-text-2">
-                Apify names and context · operator-entered economics · simulated quantities
+                {venue?.placeId === JOHNS_GRILL_PLACE_ID
+                  ? "Published menu names · Apify venue context · illustrative economics and demand"
+                  : "Apify names and context · operator-entered economics · simulated quantities"}
               </p>
             </section>
           ) : null}
