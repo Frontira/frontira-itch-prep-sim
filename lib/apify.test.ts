@@ -13,6 +13,10 @@ test("normalizes the Apify Google Places actor's location and identity fields", 
       location: { lat: 37.7936, lng: -122.3958 },
       totalScore: 4.6,
       reviewsCount: 208,
+      popularTimesHistogram: {
+        Mo: [{ hour: 18, occupancyPercent: 35 }],
+        Tu: [{ hour: 18, occupancyPercent: 75 }],
+      },
       scrapedAt: "2026-09-27T18:30:00.000Z",
     },
     undefined,
@@ -28,6 +32,10 @@ test("normalizes the Apify Google Places actor's location and identity fields", 
   assert.equal(activity.reviewCount, 208);
   assert.equal(activity.category, "Italian restaurant");
   assert.equal(activity.menuUrl, "https://example.com/menu");
+  assert.deepEqual(activity.popularTimes, [
+    { day: "Monday", hours: [{ hour: 18, popularity: 35 }] },
+    { day: "Tuesday", hours: [{ hour: 18, popularity: 75 }] },
+  ]);
 });
 
 test("does not invent an identity when Apify returns none", () => {

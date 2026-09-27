@@ -59,10 +59,20 @@ function firstNumber(record: JsonRecord, keys: string[]): number | undefined {
 
 function normalizeDayName(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
-  const day = value.trim();
+  const day = value.trim().toLowerCase();
   if (!day) return undefined;
+  const actorAbbreviations: Record<string, string> = {
+    mo: "Monday",
+    tu: "Tuesday",
+    we: "Wednesday",
+    th: "Thursday",
+    fr: "Friday",
+    sa: "Saturday",
+    su: "Sunday",
+  };
+  if (actorAbbreviations[day]) return actorAbbreviations[day];
   const match = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].find(
-    (name) => name.toLowerCase() === day.toLowerCase(),
+    (name) => name.toLowerCase() === day,
   );
   return match ?? undefined;
 }
