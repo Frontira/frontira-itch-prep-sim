@@ -14,6 +14,8 @@ export type VenueActivity = {
   observedAt: string;
   title?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
   rating?: number;
   reviewCount?: number;
   popularTimes: PopularTimeDay[];
@@ -119,14 +121,23 @@ export function normalizeVenueActivity(
   const reviewCount = firstNumber(raw, ["reviewsCount", "reviewCount"]);
   const title = typeof raw.title === "string" ? raw.title : undefined;
   const address = typeof raw.address === "string" ? raw.address : undefined;
+  const location = isRecord(raw.location) ? raw.location : undefined;
+  const latitude = location ? finiteNumber(location.lat) : undefined;
+  const longitude = location ? finiteNumber(location.lng) : undefined;
   const popularitySource = raw.popularTimesHistogram ?? raw.popularTimes;
+  const actorObservedAt =
+    typeof raw.scrapedAt === "string" && Number.isFinite(Date.parse(raw.scrapedAt))
+      ? new Date(raw.scrapedAt).toISOString()
+      : observedAt;
 
   return {
     source: "Apify Google Places",
     placeId,
-    observedAt,
+    observedAt: actorObservedAt,
     ...(title ? { title } : {}),
     ...(address ? { address } : {}),
+    ...(latitude === undefined ? {} : { latitude }),
+    ...(longitude === undefined ? {} : { longitude }),
     ...(rating === undefined ? {} : { rating }),
     ...(reviewCount === undefined ? {} : { reviewCount }),
     popularTimes: normalizePopularTimes(popularitySource),
