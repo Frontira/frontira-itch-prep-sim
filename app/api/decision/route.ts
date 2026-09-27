@@ -11,6 +11,9 @@ export async function POST(request: Request) {
       action: "review",
       confidence: 0,
       shortageRiskScore: 2,
+      probabilities: { decrease: 0, hold: 0, increase: 0, review: 1 },
+      signalConfidence: 0,
+      items: [],
       error: error instanceof Error ? error.message : "Decision unavailable",
     });
   }
