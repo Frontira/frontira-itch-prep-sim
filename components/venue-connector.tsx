@@ -382,24 +382,36 @@ export function VenueConnector({
           {activity.reviewTopics.length > 0 ? (
             <div className="mt-4">
               <p className="font-mono text-[9px] uppercase tracking-[.12em] text-text-2">
-                Guest-mentioned topics · tap a dish to replace {selectedDishName}
+                {venue?.placeId === JOHNS_GRILL_PLACE_ID
+                  ? "Guest-mentioned topics · check against the published menu below"
+                  : `Guest-mentioned topics · tap a dish to replace ${selectedDishName}`}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {activity.reviewTopics.slice(0, 6).map(({ topic, count }) => (
-                  <button
-                    key={topic}
-                    type="button"
-                    onClick={() => onUseReviewTopic(topic)}
-                    title={`Use ${topic} as the selected illustrative prep item`}
-                    className="rounded-full border border-line px-2 py-1 text-xs text-text-2"
-                  >
-                    {topic} · {count} mentions +
-                  </button>
-                ))}
+                {activity.reviewTopics.slice(0, 6).map(({ topic, count }) =>
+                  venue?.placeId === JOHNS_GRILL_PLACE_ID ? (
+                    <span
+                      key={topic}
+                      className="rounded-full border border-line px-2 py-1 text-xs text-text-2"
+                    >
+                      {topic} · {count} mentions
+                    </span>
+                  ) : (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => onUseReviewTopic(topic)}
+                      title={`Use ${topic} as the selected illustrative prep item`}
+                      className="rounded-full border border-line px-2 py-1 text-xs text-text-2"
+                    >
+                      {topic} · {count} mentions +
+                    </button>
+                  ),
+                )}
               </div>
               <p className="mt-2 text-xs text-text-2">
-                You choose which topics are actual dishes. Mention counts never set order shares or
-                forecast quantities.
+                {venue?.placeId === JOHNS_GRILL_PLACE_ID
+                  ? "Jev suggests menu matches below. Mention counts never set order shares or forecast quantities."
+                  : "You choose which topics are actual dishes. Mention counts never set order shares or forecast quantities."}
               </p>
             </div>
           ) : null}
@@ -445,7 +457,7 @@ export function VenueConnector({
                           onClick={() => onSelectDish(match.menuId ?? "")}
                           className="mt-2 text-left text-sm font-semibold text-ok underline-offset-2 hover:underline"
                         >
-                          {match.menuName} · {Math.round(match.confidence * 100)}% match
+                          {match.menuName} · {Math.round(match.confidence * 100)}% Jev confidence
                         </button>
                       ) : (
                         <p className="mt-2 text-xs text-text-2">
