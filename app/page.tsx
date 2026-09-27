@@ -3,12 +3,25 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { JevDecision } from "@/lib/jev";
-import { type ScenarioInputs, simulatePrep } from "@/lib/simulation";
+import {
+  type PrepRecommendation,
+  type ScenarioInputs,
+  type SimulationResult,
+  simulatePrep,
+} from "@/lib/simulation";
 import { parseGoogleTrendsCsv, type TrendsSignal } from "@/lib/trends";
 import type { WeatherSignal } from "@/lib/weather";
 
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const serviceLocation = {
+  label: "San Francisco city center",
+  latitude: 37.7749,
+  longitude: -122.4194,
+  trendsGeography: "San Francisco-Oakland-San Jose CA",
+  trendsUrl:
+    "https://trends.google.com/trends/explore?date=today%203-m&geo=US-CA-807&q=pasta,restaurant,bistro",
+};
 
 const initialInputs: ScenarioInputs = {
   covers: 128,
@@ -21,13 +34,17 @@ const initialInputs: ScenarioInputs = {
   seed: 42,
 };
 
-const demoTrends: TrendsSignal = {
+const localTrendsSnapshot: TrendsSignal = {
   source: "Google Trends CSV",
-  label: "Demo pasta + bistro basket",
-  observations: 28,
-  recentIndex: 68,
-  baselineIndex: 57,
-  momentum: 19.3,
+  label: "pasta + restaurant + bistro",
+  geography: serviceLocation.trendsGeography,
+  period: "2026-06-27 to 2026-09-27",
+  comparison: "7 recent days vs 86 earlier days",
+  terms: ["pasta", "restaurant", "bistro"],
+  observations: 93,
+  recentIndex: 25.3,
+  baselineIndex: 29.1,
+  momentum: -13.2,
   confidence: 1,
 };
 
@@ -86,7 +103,7 @@ function SignalCard({
 }) {
   return (
     <article
-      className={`rounded-lg border p-4 ${enabled ? "border-line bg-bg-raised" : "border-line/50 opacity-55"}`}
+      className={`rounded-lg border p-4 transition-colors ${enabled ? "border-accent/55 bg-bg-raised" : "border-line/60 bg-bg-raised/40"}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -95,13 +112,23 @@ function SignalCard({
         </div>
         <button
           type="button"
-          aria-pressed={enabled}
+          role="switch"
+          aria-checked={enabled}
+          aria-label={`${enabled ? "Exclude" : "Include"} ${title}`}
           onClick={onToggle}
-          className={`rounded-full border px-2.5 py-1 font-mono text-[9px] uppercase tracking-[.12em] ${
-            enabled ? "border-accent/70 text-accent" : "border-line text-text-2"
+          className={`flex min-h-10 min-w-[112px] shrink-0 items-center justify-between gap-2 rounded-md border px-2.5 py-2 font-mono text-[9px] uppercase tracking-[.08em] transition-colors ${
+            enabled ? "border-ok/70 bg-ok-wash text-ok" : "border-line bg-bg text-text-2"
           }`}
         >
-          {enabled ? "Included" : "Excluded"}
+          <span
+            aria-hidden="true"
+            className={`relative h-5 w-9 rounded-full transition-colors ${enabled ? "bg-ok" : "bg-line"}`}
+          >
+            <span
+              className={`absolute top-1 size-3 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : "translate-x-1"}`}
+            />
+          </span>
+          {enabled ? "On · used" : "Off"}
         </button>
       </div>
       <div className="mt-5 flex items-end justify-between gap-3">
@@ -146,19 +173,115 @@ function ProbabilityBars({ probabilities }: { probabilities: Record<string, numb
   );
 }
 
+function DemandDistribution({
+  result,
+  recommendation,
+}: {
+  result: SimulationResult;
+  recommendation: PrepRecommendation;
+}) {
+  const { bins, min, max, p10, p50, p90 } = recommendation.demandDistribution;
+  const peak = Math.max(...bins.map((bin) => bin.count));
+  const position = (value: number) => `${((value - min) / Math.max(1, max - min)) * 100}%`;
+
+  return (
+    <article className="rounded-lg border border-line bg-bg-raised p-5" aria-live="polite">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-ok" aria-hidden="true" />
+            <p className="font-mono text-[10px] uppercase tracking-[.2em] text-ok">
+              Live scenario preview
+            </p>
+          </div>
+          <h2 className="mt-2 font-serif text-3xl">
+            Where {recommendation.name.toLowerCase()} demand may land
+          </h2>
+        </div>
+        <p className="max-w-sm text-right text-xs leading-5 text-text-2">
+          {result.runs.toLocaleString()} simulated services recalculate as assumptions or sources
+          change.
+        </p>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div>
+          <div
+            className="relative h-40 border-b border-line"
+            role="img"
+            aria-label={`Distribution of simulated ${recommendation.unit} of ${recommendation.name} from ${min} to ${max}. Ten percent of services are below ${p10}, the median is ${p50}, and ninety percent are below ${p90}.`}
+          >
+            <div className="absolute inset-0 flex items-end gap-1 px-1">
+              {bins.map((bin) => (
+                <div
+                  key={bin.from}
+                  className="min-w-0 flex-1 rounded-t-sm bg-ok/65 transition-[height] duration-300"
+                  style={{ height: `${Math.max(3, (bin.count / peak) * 100)}%` }}
+                  title={`${bin.from}–${bin.to} ${recommendation.unit}: ${bin.count.toLocaleString()} runs`}
+                />
+              ))}
+            </div>
+            <div
+              className="absolute inset-y-0 border-l border-dashed border-text-2/55"
+              style={{ left: position(p10) }}
+            />
+            <div
+              className="absolute inset-y-0 border-l-2 border-ok"
+              style={{ left: position(p50) }}
+            />
+            <div
+              className="absolute inset-y-0 border-l border-dashed border-text-2/55"
+              style={{ left: position(p90) }}
+            />
+          </div>
+          <div className="mt-2 flex justify-between font-mono text-[9px] text-text-2">
+            <span>
+              {min} {recommendation.unit}
+            </span>
+            <span>
+              {max} {recommendation.unit}
+            </span>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-1">
+          {[
+            ["P10", p10],
+            ["Median", p50],
+            ["P90", p90],
+          ].map(([label, value]) => (
+            <div key={label} className="min-w-20 border-l border-line pl-3">
+              <p className="font-mono text-[9px] uppercase tracking-[.12em] text-text-2">{label}</p>
+              <p className="mt-1 font-serif text-2xl">{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function Home() {
   const [draft, setDraft] = useState(initialInputs);
-  const [inputs, setInputs] = useState(initialInputs);
   const [weather, setWeather] = useState<WeatherSignal | null>(null);
   const [weatherError, setWeatherError] = useState(false);
-  const [trends, setTrends] = useState<TrendsSignal>(demoTrends);
+  const [trends, setTrends] = useState<TrendsSignal>(localTrendsSnapshot);
   const [signals, setSignals] = useState({ weather: true, trends: true, events: true });
   const [decision, setDecision] = useState<JevDecision | null>(null);
   const [summary, setSummary] = useState<{ summary: string; source: string } | null>(null);
   const [deciding, setDeciding] = useState(false);
   const [selectedItem, setSelectedItem] = useState("gnocchi");
   const [trendsError, setTrendsError] = useState<string | null>(null);
-  const result = useMemo(() => simulatePrep(inputs), [inputs]);
+  const liveInputs = useMemo(
+    () => ({
+      ...draft,
+      weatherUplift: signals.weather ? (weather?.coverEffect ?? 0) : 0,
+      trendUplift: signals.trends ? trends.momentum : 0,
+      eventUplift: signals.events ? draft.eventUplift : 0,
+      seed: 42,
+    }),
+    [draft, signals, trends.momentum, weather?.coverEffect],
+  );
+  const result = useMemo(() => simulatePrep(liveInputs), [liveInputs]);
   const savings = Math.max(0, result.baselineWasteCost - result.projectedWasteCost);
   const selectedRecommendation =
     result.recommendations.find((item) => item.id === selectedItem) ?? result.recommendations[0];
@@ -166,9 +289,12 @@ export default function Home() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/signals/weather?latitude=37.7749&longitude=-122.4194", {
-      signal: controller.signal,
-    })
+    fetch(
+      `/api/signals/weather?latitude=${serviceLocation.latitude}&longitude=${serviceLocation.longitude}`,
+      {
+        signal: controller.signal,
+      },
+    )
       .then((response) => {
         if (!response.ok) throw new Error("Weather unavailable");
         return response.json() as Promise<WeatherSignal>;
@@ -176,6 +302,8 @@ export default function Home() {
       .then((signal) => {
         setWeather(signal);
         setWeatherError(false);
+        setDecision(null);
+        setSummary(null);
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -183,6 +311,18 @@ export default function Home() {
       });
     return () => controller.abort();
   }, []);
+
+  function updateDraft(next: ScenarioInputs) {
+    setDraft(next);
+    setDecision(null);
+    setSummary(null);
+  }
+
+  function updateSignals(next: typeof signals) {
+    setSignals(next);
+    setDecision(null);
+    setSummary(null);
+  }
 
   function activeInputs(seed: number): ScenarioInputs {
     return {
@@ -195,9 +335,8 @@ export default function Home() {
   }
 
   async function runScenario() {
-    const nextInputs = activeInputs(Date.now());
+    const nextInputs = activeInputs(42);
     const nextResult = simulatePrep(nextInputs);
-    setInputs(nextInputs);
     setDeciding(true);
     try {
       const evidence = {
@@ -236,6 +375,8 @@ export default function Home() {
       const signal = parseGoogleTrendsCsv(await file.text(), file.name.replace(/\.csv$/i, ""));
       setTrends(signal);
       setTrendsError(null);
+      setDecision(null);
+      setSummary(null);
     } catch (error) {
       setTrendsError(error instanceof Error ? error.message : "Could not parse Trends CSV");
     }
@@ -257,7 +398,7 @@ export default function Home() {
             </div>
           </div>
           <div className="rounded-full border border-line px-3 py-1 font-mono text-[10px] uppercase tracking-[.14em] text-text-2">
-            San Francisco · Dinner service
+            Demo location · San Francisco city center
           </div>
         </div>
       </header>
@@ -287,26 +428,26 @@ export default function Home() {
             <Field
               label="Booked covers"
               value={draft.covers}
-              onChange={(covers) => setDraft({ ...draft, covers })}
+              onChange={(covers) => updateDraft({ ...draft, covers })}
             />
             <div className="grid grid-cols-2 gap-3">
               <Field
                 label="No-show rate"
                 value={draft.noShowRate}
                 suffix="%"
-                onChange={(noShowRate) => setDraft({ ...draft, noShowRate })}
+                onChange={(noShowRate) => updateDraft({ ...draft, noShowRate })}
               />
               <Field
                 label="Safety stock"
                 value={draft.safetyStock}
                 suffix="%"
-                onChange={(safetyStock) => setDraft({ ...draft, safetyStock })}
+                onChange={(safetyStock) => updateDraft({ ...draft, safetyStock })}
               />
               <Field
                 label="Event effect"
                 value={draft.eventUplift}
                 suffix="%"
-                onChange={(eventUplift) => setDraft({ ...draft, eventUplift })}
+                onChange={(eventUplift) => updateDraft({ ...draft, eventUplift })}
               />
               <div data-ledger-field>
                 <span data-ledger-label>Simulations</span>
@@ -370,31 +511,44 @@ export default function Home() {
                 value={weather ? `${weather.temperatureF}°F` : "Loading…"}
                 detail={
                   weather
-                    ? `${weather.rainProbability}% rain · ${weather.windGustMph} mph gusts · ${weather.coverEffect}% cover effect`
+                    ? `${weather.rainProbability}% rain · ${weather.windGustMph} mph gusts · ${weather.coverEffect}% cover effect · ${serviceLocation.latitude}, ${serviceLocation.longitude}`
                     : "Fetching the 17:00–22:00 service window."
                 }
                 enabled={signals.weather}
-                onToggle={() => setSignals({ ...signals, weather: !signals.weather })}
+                onToggle={() => updateSignals({ ...signals, weather: !signals.weather })}
                 tone={weather ? "live" : "neutral"}
               />
               <SignalCard
                 title="Search momentum"
-                source={trends.label}
+                source="Google Trends · local DMA snapshot"
                 value={`${trends.momentum > 0 ? "+" : ""}${trends.momentum}%`}
-                detail={`${trends.recentIndex} recent index vs ${trends.baselineIndex} baseline · ${trends.observations} observations`}
+                detail={`${trends.geography} · ${trends.recentIndex} recent index vs ${trends.baselineIndex} baseline · ${trends.observations} observations`}
                 enabled={signals.trends}
-                onToggle={() => setSignals({ ...signals, trends: !signals.trends })}
-                tone={trends.label.startsWith("Demo") ? "demo" : "live"}
+                onToggle={() => updateSignals({ ...signals, trends: !signals.trends })}
+                tone="live"
               >
-                <label className="mt-3 inline-flex cursor-pointer items-center gap-2 font-mono text-[9px] uppercase tracking-[.1em] text-accent">
-                  Import Google Trends CSV
-                  <input
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="sr-only"
-                    onChange={(event) => importTrends(event.target.files?.[0])}
-                  />
-                </label>
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line/60 pt-3 font-mono text-[9px] uppercase tracking-[.1em]">
+                  <a
+                    href={serviceLocation.trendsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-ok underline-offset-4 hover:underline"
+                  >
+                    View local evidence
+                  </a>
+                  <label className="cursor-pointer text-ok underline-offset-4 hover:underline">
+                    Import updated CSV
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      className="sr-only"
+                      onChange={(event) => importTrends(event.target.files?.[0])}
+                    />
+                  </label>
+                </div>
+                <p className="mt-2 font-mono text-[9px] text-text-2">
+                  {trends.label} · {trends.comparison} · {trends.period}
+                </p>
                 {trendsError ? <p className="mt-2 text-xs text-err">{trendsError}</p> : null}
               </SignalCard>
               <SignalCard
@@ -403,11 +557,15 @@ export default function Home() {
                 value={`+${draft.eventUplift}%`}
                 detail="Dinner-period demand effect. Kept explicit until a venue source is connected."
                 enabled={signals.events}
-                onToggle={() => setSignals({ ...signals, events: !signals.events })}
+                onToggle={() => updateSignals({ ...signals, events: !signals.events })}
                 tone="demo"
               />
             </div>
           </div>
+
+          {selectedRecommendation ? (
+            <DemandDistribution result={result} recommendation={selectedRecommendation} />
+          ) : null}
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[

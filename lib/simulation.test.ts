@@ -48,6 +48,17 @@ test("always runs enough scenarios for a useful distribution", () => {
     runs: 12,
   });
   assert.equal(result.runs, 1_000);
+  assert.equal(result.coverDistribution.bins.length, 14);
+  assert.equal(
+    result.coverDistribution.bins.reduce((sum, bin) => sum + bin.count, 0),
+    result.runs,
+  );
+  assert.ok(result.coverDistribution.p10 <= result.coverDistribution.p50);
+  assert.ok(result.coverDistribution.p50 <= result.coverDistribution.p90);
+  assert.equal(
+    result.recommendations[0]?.demandDistribution.bins.reduce((sum, bin) => sum + bin.count, 0),
+    result.runs,
+  );
 });
 
 test("external signals produce explainable item-level contributions", () => {

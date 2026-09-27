@@ -29,6 +29,14 @@ export type PrepRecommendation = MenuItem & {
   expectedWaste: number;
   baselineWaste: number;
   baselineShortageRisk: number;
+  demandDistribution: {
+    min: number;
+    max: number;
+    p10: number;
+    p50: number;
+    p90: number;
+    bins: Array<{ from: number; to: number; count: number }>;
+  };
   contributions: {
     bookedDemand: number;
     weather: number;
@@ -40,6 +48,14 @@ export type PrepRecommendation = MenuItem & {
 export type SimulationResult = {
   effectiveCovers: number;
   runs: number;
+  coverDistribution: {
+    min: number;
+    max: number;
+    p10: number;
+    p50: number;
+    p90: number;
+    bins: Array<{ from: number; to: number; count: number }>;
+  };
   recommendations: PrepRecommendation[];
   projectedWasteCost: number;
   baselineWasteCost: number;
@@ -149,14 +165,39 @@ function round(value: number, digits = 1) {
   return Math.round(value * factor) / factor;
 }
 
+function buildHistogram(values: number[], binCount = 14) {
+  const min = Math.floor(Math.min(...values));
+  const max = Math.ceil(Math.max(...values));
+  const span = Math.max(1, max - min);
+  const binWidth = span / binCount;
+  const bins = Array.from({ length: binCount }, (_, index) => ({
+    from: round(min + index * binWidth),
+    to: round(min + (index + 1) * binWidth),
+    count: 0,
+  }));
+  for (const value of values) {
+    const index = Math.min(binCount - 1, Math.floor(((value - min) / span) * binCount));
+    const bin = bins[index];
+    if (bin) bin.count += 1;
+  }
+  return { min, max, bins };
+}
+
 export function simulatePrep(inputs: ScenarioInputs, menu = DEMO_MENU): SimulationResult {
   const runs = Math.max(1_000, Math.min(inputs.runs ?? 2_000, 20_000));
   const random = mulberry32(inputs.seed ?? 42);
   const bookedCovers = Math.max(0, inputs.covers * (1 - inputs.noShowRate / 100));
-  const effectiveCovers = Math.max(
+  const expectedCovers = Math.max(
     0,
     bookedCovers * (1 + inputs.weatherUplift / 100 + inputs.eventUplift / 100),
   );
+  const coverOutcomes = Array.from({ length: runs }, () => {
+    const serviceShock = normal(random) * 0.055;
+    const arrivalNoise = normal(random) * Math.max(1.5, Math.sqrt(expectedCovers) * 0.45);
+    return Math.max(0, Math.round(expectedCovers * (1 + serviceShock) + arrivalNoise));
+  });
+  const effectiveCovers = coverOutcomes.reduce((sum, value) => sum + value, 0) / runs;
+  const histogram = buildHistogram(coverOutcomes);
   const serviceLevel = Math.min(0.99, Math.max(0.55, 0.78 + inputs.safetyStock / 100));
 
   const recommendations = menu.map((item) => {
@@ -182,6 +223,7 @@ export function simulatePrep(inputs: ScenarioInputs, menu = DEMO_MENU): Simulati
       demands.reduce((sum, value) => sum + Math.max(0, recommendedPrep - value), 0) / runs;
     const baselineWaste =
       demands.reduce((sum, value) => sum + Math.max(0, item.baselinePar - value), 0) / runs;
+    const demandHistogram = buildHistogram(demands);
 
     return {
       ...item,
@@ -191,6 +233,12 @@ export function simulatePrep(inputs: ScenarioInputs, menu = DEMO_MENU): Simulati
       expectedWaste: round(expectedWaste),
       baselineWaste: round(baselineWaste),
       baselineShortageRisk: round(baselineShortageRisk * 100),
+      demandDistribution: {
+        ...demandHistogram,
+        p10: percentile(demands, 0.1),
+        p50: percentile(demands, 0.5),
+        p90: percentile(demands, 0.9),
+      },
       contributions: {
         bookedDemand: round(bookedDemand),
         weather: round(weatherContribution),
@@ -212,6 +260,12 @@ export function simulatePrep(inputs: ScenarioInputs, menu = DEMO_MENU): Simulati
   return {
     effectiveCovers: round(effectiveCovers),
     runs,
+    coverDistribution: {
+      ...histogram,
+      p10: percentile(coverOutcomes, 0.1),
+      p50: percentile(coverOutcomes, 0.5),
+      p90: percentile(coverOutcomes, 0.9),
+    },
     recommendations,
     projectedWasteCost: round(projectedWasteCost, 2),
     baselineWasteCost: round(baselineWasteCost, 2),
