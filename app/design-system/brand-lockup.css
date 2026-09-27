@@ -1,0 +1,94 @@
+/* ==========================================================================
+   FRONTIRA BRAND LOCKUP · v1  (#60)
+
+   The identity, across every brand-bearing surface: application headers and
+   footers, auth screens, document covers, presentation bookends, favicons,
+   avatars and collapsed navigation rails.
+
+   TOKEN-ONLY AND UNLAYERED, for the same reason the spec grid is: this has to
+   render in a research lab that links only fonts and tokens, in a deck whose
+   stylesheet imports nothing but the token file, and in print. A rule inside
+   @layer components loses to any unlayered rule at all (#54), and an identity
+   that a host page can accidentally restyle is not an identity.
+
+   COLOUR IS INHERITED, deliberately. Both shipped assets paint with
+   currentColor, so the identity takes the colour of the text around it and
+   follows the register without a second file. This is a correction: the
+   official wordmark is hardcoded fill="#6F43D5", which measures 6.11:1 on
+   paper but 3.24:1 on ink and 3.03:1 on ink raised — legible on one register
+   and marginal on the other.
+
+   ONE CUSTOM PROPERTY drives the whole thing. --brand-height is the rendered
+   height of the identity; clear space, the CVP's size and its measure are all
+   derived from it, so a consumer sets one number and the proportions hold.
+   ========================================================================== */
+
+.lg-brand {
+  --brand-height: 24px;
+
+  /* Clear space is half the mark's width on every side. The mark's aspect is
+     0.578, so half of it against the shared height dimension is 0.289. */
+  --brand-clear: calc(var(--brand-height) * 0.289);
+
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--brand-height) * 0.34);
+  padding: var(--brand-clear);
+  color: inherit;
+}
+
+/* The asset. Height is the authored dimension and width follows the drawing,
+   because the three variants have different aspects (mark 0.578, wordmark
+   4.31) and constraining width would distort one of them. */
+.lg-brand-asset {
+  display: block;
+  height: var(--brand-height);
+  width: auto;
+  flex: none;
+}
+.lg-brand-asset svg {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+/* ── the CVP ──────────────────────────────────────────────────────────────
+   Only in the lockup variant, and only ever in English: the CVP is a claim,
+   not a sentence, and a claim that changes shape per market is not a claim.
+
+   Bounded by the wordmark's own rendered width — 4.31 times the height — so
+   the lockup stays one rectangle rather than a wordmark with a paragraph
+   trailing off it. */
+.lg-brand-cvp {
+  display: block;
+  max-width: calc(var(--brand-height) * 4.31);
+  font-family: var(--lg-grot);
+  font-size: max(11px, calc(var(--brand-height) * 0.30));
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--lg-text-2, currentColor);
+}
+
+/* The CVP belongs to the lockup alone. Emitting it beside a bare wordmark or
+   mark would be a different composition than the one the contract names. */
+.lg-brand:not([data-brand="lockup"]) .lg-brand-cvp { display: none; }
+
+/* ── compact surfaces ─────────────────────────────────────────────────────
+   A favicon, app icon, avatar or collapsed rail is a square of space, not a
+   small version of a header. The mark centres in it and the clear space
+   stops scaling past the point where it would eat the glyph. */
+.lg-brand[data-surface="favicon"],
+.lg-brand[data-surface="appIcon"],
+.lg-brand[data-surface="avatar"],
+.lg-brand[data-surface="narrowNav"] {
+  --brand-clear: calc(var(--brand-height) * 0.2);
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── print ────────────────────────────────────────────────────────────────
+   An identity that breaks across a page boundary is two half-identities. */
+@media print {
+  .lg-brand { break-inside: avoid; }
+}

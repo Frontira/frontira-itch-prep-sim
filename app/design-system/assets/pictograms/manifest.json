@@ -1,0 +1,196 @@
+{
+  "$schema": "./manifest.schema.json",
+  "version": "1.1.0",
+  "status": "selected",
+  "family": {
+    "provider": "Phosphor",
+    "package": "@phosphor-icons/core",
+    "version": "2.1.1",
+    "weight": "regular",
+    "license": "MIT",
+    "source": "https://github.com/phosphor-icons/phosphor-core",
+    "viewBox": "0 0 256 256"
+  },
+  "defaults": {
+    "size": 24,
+    "minimumSize": 16,
+    "sizes": {
+      "sm": 16,
+      "md": 24,
+      "lg": 32,
+      "hero": 64
+    },
+    "color": "currentColor",
+    "gradient": "relationship-carrier-only",
+    "accessibility": "Decorative icons are aria-hidden. Meaningful icons require a visible label or an aria-label."
+  },
+  "namespaces": {
+    "activity": "Generic actions that can happen inside or between engagements.",
+    "data": "Persistent operational data and storage.",
+    "engagement": "Reserved Frontira offer and engagement markers.",
+    "governance": "Control, review, evidence and completion.",
+    "intelligence": "Agentic capability, reasoning and retrieval.",
+    "interface": "Human-facing applications and communication channels.",
+    "orchestration": "Ordered work, automation and delivery flow.",
+    "people": "People, teams and accountable human roles.",
+    "systems": "Connections between software and operational systems."
+  },
+  "icons": {
+    "activity.handoff": {
+      "label": "Handoff",
+      "providerIcon": "arrows-left-right",
+      "reserved": false,
+      "usage": "Generic transfer of work or context between actors or systems."
+    },
+    "activity.meeting": {
+      "label": "Meeting",
+      "providerIcon": "users",
+      "reserved": false,
+      "usage": "Generic meeting or working session. Never a named Frontira engagement."
+    },
+    "activity.review": {
+      "label": "Review",
+      "providerIcon": "clipboard-text",
+      "reserved": false,
+      "usage": "Generic review, quality gate or assessment activity."
+    },
+    "activity.workshop": {
+      "label": "Workshop",
+      "providerIcon": "presentation-chart",
+      "reserved": false,
+      "usage": "Generic facilitated workshop. Never substitutes for a named engagement."
+    },
+    "data.database": {
+      "label": "Database",
+      "providerIcon": "database",
+      "reserved": false,
+      "usage": "Structured operational data or a database system."
+    },
+    "data.storage": {
+      "label": "Storage",
+      "providerIcon": "hard-drives",
+      "reserved": false,
+      "usage": "File, object or durable system storage."
+    },
+    "engagement.exploration": {
+      "label": "Exploration",
+      "providerIcon": "compass",
+      "reserved": true,
+      "usage": "Reserved for the named Frontira Exploration engagement."
+    },
+    "engagement.inspiration": {
+      "label": "Inspiration",
+      "providerIcon": "broadcast",
+      "reserved": true,
+      "usage": "Reserved for the named Frontira Inspiration engagement."
+    },
+    "engagement.scoping": {
+      "label": "Scoping",
+      "providerIcon": "bounding-box",
+      "reserved": true,
+      "usage": "Reserved for the named Frontira Scoping engagement."
+    },
+    "engagement.sprint": {
+      "label": "Agentic AI Sprint",
+      "providerIcon": "circuitry",
+      "reserved": true,
+      "usage": "Reserved for the named Frontira Agentic AI Sprint delivery engagement."
+    },
+    "governance.control": {
+      "label": "Governance",
+      "providerIcon": "shield-check",
+      "reserved": false,
+      "usage": "Authority, permission, control or governed execution."
+    },
+    "governance.approval": {
+      "label": "Approval",
+      "providerIcon": "seal-check",
+      "reserved": false,
+      "usage": "A recorded decision that authorizes work to proceed."
+    },
+    "governance.audit": {
+      "label": "Audit",
+      "providerIcon": "list-checks",
+      "reserved": false,
+      "usage": "A traceable inspection of evidence, actions or controls."
+    },
+    "governance.escalation": {
+      "label": "Escalation",
+      "providerIcon": "arrow-up-right",
+      "reserved": false,
+      "usage": "An exception or decision elevated to a higher authority."
+    },
+    "governance.permission": {
+      "label": "Permission",
+      "providerIcon": "lock-key",
+      "reserved": false,
+      "usage": "An access grant, restriction or authorization boundary."
+    },
+    "governance.proof": {
+      "label": "Proof",
+      "providerIcon": "check-circle",
+      "reserved": false,
+      "usage": "Verified outcome, evidence or completed quality gate."
+    },
+    "governance.readiness": {
+      "label": "Readiness",
+      "providerIcon": "gauge",
+      "reserved": false,
+      "usage": "A capability, workflow or case assessed as ready to proceed."
+    },
+    "intelligence.agent": {
+      "label": "AI agent",
+      "providerIcon": "robot",
+      "reserved": false,
+      "usage": "A bounded software agent, not AI as a decorative concept."
+    },
+    "intelligence.reasoning": {
+      "label": "Reasoning",
+      "providerIcon": "brain",
+      "reserved": false,
+      "usage": "Interpretation, reasoning or decision support."
+    },
+    "intelligence.retrieval": {
+      "label": "Retrieval",
+      "providerIcon": "magnifying-glass",
+      "reserved": false,
+      "usage": "Search, retrieval or context lookup."
+    },
+    "interface.app": {
+      "label": "Interface",
+      "providerIcon": "browser",
+      "reserved": false,
+      "usage": "A browser, application or human-facing interface."
+    },
+    "interface.message": {
+      "label": "Message",
+      "providerIcon": "chat-circle-text",
+      "reserved": false,
+      "usage": "A written message, conversation or communication channel."
+    },
+    "orchestration.workflow": {
+      "label": "Workflow",
+      "providerIcon": "flow-arrow",
+      "reserved": false,
+      "usage": "Ordered work, automation or process orchestration."
+    },
+    "people.team": {
+      "label": "Users and team",
+      "providerIcon": "users-three",
+      "reserved": false,
+      "usage": "A team, group of users or accountable human participants."
+    },
+    "people.owner": {
+      "label": "Owner",
+      "providerIcon": "user-circle",
+      "reserved": false,
+      "usage": "The individually accountable human owner of work or a decision."
+    },
+    "systems.integration": {
+      "label": "Integration",
+      "providerIcon": "plugs-connected",
+      "reserved": false,
+      "usage": "Connected software, API integration or system interoperability."
+    }
+  }
+}

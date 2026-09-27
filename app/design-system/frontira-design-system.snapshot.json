@@ -1,0 +1,18 @@
+{
+  "package": "@frontira/design-system",
+  "version": "4.8.0",
+  "contracts": {
+    "tokens": 1,
+    "application": 1,
+    "components": 1,
+    "atmosphere": 1,
+    "motion": 1,
+    "workflow": 1,
+    "specGrid": 1,
+    "brandLockup": 1,
+    "openGraph": 1,
+    "miroProfile": 1
+  },
+  "sourceCommit": "08da97cb8395556d2d7bcd42a5f0c9f45d120271",
+  "integrity": "sha256-87cbf70d41fc0c2cdce5289d876cd12ea885867e79631550338b8fd5fcdd8737"
+}

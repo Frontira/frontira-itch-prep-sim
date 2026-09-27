@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "id": "frontira-open-graph-1",
+  "status": "selected",
+  "canvas": {
+    "width": 1200,
+    "height": 630,
+    "format": "png",
+    "safeArea": {
+      "top": 60,
+      "right": 72,
+      "bottom": 60,
+      "left": 72
+    }
+  },
+  "content": {
+    "brand": "frontira",
+    "brandAsset": {
+      "required": true,
+      "preferred": "official-lettermark",
+      "lettermark": "assets/Frontira_F_Mark.svg",
+      "lettermarkExport": "@frontira/design-system/brand/f-mark.svg",
+      "wordmark": "assets/Frontira_Logo_Vector.svg",
+      "wordmarkExport": "@frontira/design-system/brand/wordmark.svg",
+      "pairLettermarkWithBrandName": true,
+      "allowTypesetApproximation": false
+    },
+    "title": {
+      "maxCharacters": 64,
+      "maxLines": 2
+    },
+    "descriptor": {
+      "maxCharacters": 120,
+      "maxLines": 3
+    },
+    "kicker": {
+      "maxCharacters": 36,
+      "maxLines": 1
+    },
+    "altText": {
+      "required": true,
+      "maxCharacters": 160
+    }
+  },
+  "visual": {
+    "defaultRegister": "ink",
+    "minimumEssentialTextSize": 24,
+    "minimumReceiptTextSize": 16,
+    "palette": {
+      "background": "#0A0A0F",
+      "surface": "#14121F",
+      "foreground": "#F2F2F2",
+      "muted": "#8A8F98",
+      "purple": "#6F43D5",
+      "lavender": "#A080ED",
+      "cyan": "#8BDDD3",
+      "acid": "#EAFF95"
+    },
+    "gradient": {
+      "stops": ["#6F43D5", "#A080ED", "#8BDDD3"],
+      "usage": "one-large-carrier"
+    },
+    "rules": [
+      "Keep brand, title and descriptor inside the safe area.",
+      "Use one primary visual idea, not a screenshot of the full page.",
+      "Use the house gradient on one large carrier only.",
+      "Keep receipts, labels and decorative details subordinate to the title.",
+      "Do not place essential information in the outer crop zone."
+    ]
+  },
+  "metadata": {
+    "required": [
+      "canonical",
+      "og:type",
+      "og:url",
+      "og:title",
+      "og:description",
+      "og:image",
+      "og:image:width",
+      "og:image:height",
+      "og:image:alt",
+      "twitter:card",
+      "twitter:title",
+      "twitter:description",
+      "twitter:image"
+    ],
+    "openGraphType": "website",
+    "twitterCard": "summary_large_image",
+    "absoluteUrls": true
+  },
+  "ownership": {
+    "visualContract": "@frontira/design-system",
+    "scaffoldEnforcement": "frontira David",
+    "pageContent": "consuming project"
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "$schema": "./schemas/app-components.schema.json",
+  "contractVersion": 1,
+  "distribution": "hybrid",
+  "visualOwner": "@frontira/design-system/app-components",
+  "behaviorOwner": "shadcn/Radix or the native platform",
+  "rootRequirement": ".lg-ink, .lg-paper, [data-register=\"ink\"], or [data-register=\"paper\"]",
+  "glyphContract": {
+    "family": "Phosphor Regular 2.1.1",
+    "domainSource": "@frontira/design-system/pictograms",
+    "controlSource": "@frontira/design-system/control-glyphs",
+    "providerImports": "forbidden outside the governed adapter",
+    "sizes": [
+      12,
+      16,
+      20
+    ],
+    "iconOnlyMinimumHitTarget": 44
+  },
+  "components": {
+    "button": {
+      "source": "shadcn/ui button",
+      "root": "[data-ledger-ui=\"button\"]",
+      "variants": [
+        "primary",
+        "secondary",
+        "ghost",
+        "destructive"
+      ],
+      "sizes": [
+        "default",
+        "sm",
+        "icon"
+      ],
+      "slots": [
+        "leading-glyph",
+        "label",
+        "trailing-glyph"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "active",
+        "disabled",
+        "loading"
+      ]
+    },
+    "input": {
+      "source": "shadcn/ui input",
+      "root": "[data-ledger-ui=\"input\"]",
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled",
+        "validation-error"
+      ]
+    },
+    "textarea": {
+      "source": "shadcn/ui textarea",
+      "root": "[data-ledger-ui=\"textarea\"]",
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled",
+        "validation-error"
+      ]
+    },
+    "select": {
+      "source": "shadcn/ui select trigger",
+      "root": "[data-ledger-ui=\"select\"]",
+      "slots": [
+        "value",
+        "disclosure-glyph",
+        "indicator-glyph"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled",
+        "validation-error"
+      ]
+    },
+    "checkbox": {
+      "source": "shadcn/ui checkbox",
+      "root": "[data-ledger-ui=\"checkbox\"]",
+      "slots": [
+        "indicator-glyph"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "checked",
+        "disabled"
+      ]
+    },
+    "status": {
+      "source": "Ledger status grammar",
+      "root": "[data-ledger-ui=\"status\"]",
+      "variants": [
+        "error",
+        "warning",
+        "success",
+        "info"
+      ],
+      "slots": [
+        "leading-glyph",
+        "label"
+      ],
+      "states": [
+        "default"
+      ]
+    },
+    "card": {
+      "source": "shadcn/ui card",
+      "root": "[data-ledger-ui=\"card\"]",
+      "variants": [
+        "default",
+        "raised",
+        "interactive",
+        "sequence",
+        "summary",
+        "receipt"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "locked",
+        "ready",
+        "active",
+        "complete"
+      ],
+      "slots": [
+        "index",
+        "pictogram",
+        "heading",
+        "trailing",
+        "reason"
+      ]
+    },
+    "alert": {
+      "source": "shadcn/ui alert with Ledger N.B. grammar",
+      "root": "[data-ledger-ui=\"alert\"]",
+      "variants": [
+        "error",
+        "warning",
+        "success",
+        "info"
+      ],
+      "slots": [
+        "leading-glyph",
+        "label",
+        "description"
+      ],
+      "states": [
+        "default"
+      ]
+    },
+    "table-row": {
+      "source": "shadcn/ui table",
+      "root": "[data-ledger-ui=\"table-row\"]",
+      "variants": [
+        "default",
+        "dense"
+      ],
+      "slots": [
+        "action-glyph"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "selected"
+      ]
+    },
+    "dialog": {
+      "source": "shadcn/ui dialog",
+      "root": "[data-ledger-ui=\"dialog\"]",
+      "slots": [
+        "overlay",
+        "content",
+        "close-glyph",
+        "title",
+        "description",
+        "actions"
+      ],
+      "states": [
+        "open",
+        "reduced-motion"
+      ]
+    },
+    "sheet": {
+      "source": "shadcn/ui sheet",
+      "root": "[data-ledger-ui=\"sheet\"]",
+      "slots": [
+        "overlay",
+        "content",
+        "close-glyph",
+        "title",
+        "description",
+        "actions"
+      ],
+      "states": [
+        "open",
+        "reduced-motion"
+      ]
+    },
+    "tooltip": {
+      "source": "shadcn/ui tooltip",
+      "root": "[data-ledger-ui=\"tooltip\"]",
+      "states": [
+        "open",
+        "reduced-motion"
+      ]
+    },
+    "skeleton": {
+      "source": "shadcn/ui skeleton",
+      "root": "[data-ledger-ui=\"skeleton\"]",
+      "states": [
+        "loading",
+        "reduced-motion"
+      ]
+    },
+    "progress": {
+      "source": "shadcn/ui progress",
+      "root": "[data-ledger-ui=\"progress\"]",
+      "slots": [
+        "indicator",
+        "loading-glyph"
+      ],
+      "states": [
+        "loading",
+        "complete",
+        "reduced-motion"
+      ]
+    },
+    "navigation-item": {
+      "source": "shadcn application shell",
+      "root": "[data-ledger-ui=\"nav-item\"]",
+      "slots": [
+        "leading-glyph",
+        "label",
+        "trailing-glyph"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "active",
+        "disabled"
+      ]
+    },
+    "link": {
+      "source": "native link or shadcn application link",
+      "root": "[data-ledger-ui=\"link\"]",
+      "slots": [
+        "label",
+        "trailing-glyph"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled"
+      ]
+    }
+  }
+}

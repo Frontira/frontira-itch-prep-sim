@@ -1,0 +1,132 @@
+{
+  "$comment": "Ledger Spec Grid contract (#46). A hairline matrix for finite sets of comparable principles. Promoted out of the Icon Family Lab, where the pattern was local CSS whose responsive collapse depended on nth-child(3n)/nth-child(2n) border juggling — a rule that has to be rewritten by hand for every column count, and silently doubles or drops a hairline when it is not.",
+  "version": "1.0.0",
+  "layer": {
+    "$comment": "NOT the application layer. data-ledger-ui is reserved for interactive controls (button, input, dialog, select) and carries the component layer's focus, disabled and reduced-motion groups. The spec grid is editorial content that must render in a research lab that links only fonts + tokens, in a slide deck, and in print. So it ships token-only and unlayered, like control-glyphs.css and pictograms.css.",
+    "stylesheet": "spec-grid.css",
+    "dependsOn": [
+      "tokens/generated/ledger-tokens.css"
+    ],
+    "cascadeLayer": null,
+    "rootAttribute": null,
+    "classPrefix": "lg-spec"
+  },
+  "columns": {
+    "$comment": "Two or three. One column is a list and the pattern adds nothing; four columns starve the body copy at the container widths this is used at.",
+    "allowed": [
+      2,
+      3
+    ],
+    "collapse": [
+      {
+        "maxWidth": 1120,
+        "columns": 2
+      },
+      {
+        "maxWidth": 720,
+        "columns": 1
+      }
+    ],
+    "collapseNote": "Collapse is driven by grid-template-columns alone. The hairlines do not participate, because every cell carries the same two borders at every width — see borders.technique.",
+    "collapseBasis": "container",
+    "collapseBasisNote": "Container queries, not viewport queries. A slide is authored at a 1920px stage and then SCALED to fit, so its width never changes however narrow the browser gets — under viewport queries a deck opened on a phone reflows its grid to one column inside a stage that is still 1920px wide, breaking the layout precisely where nothing moved. #46 says the column count follows CONTAINER width, and it is right.",
+    "queryContainerClass": "lg-spec"
+  },
+  "items": {
+    "$comment": "The issue scopes this to finite sets of roughly 4–8 comparable principles. Below 4 the matrix reads as an accident; above 8 it stops being scannable and wants a table.",
+    "min": 4,
+    "max": 8,
+    "outOfRangeNote": "Fewer than 4 items is a list, more than 8 is a table. Both are better components than a stretched matrix."
+  },
+  "borders": {
+    "$comment": "MEASURED, not argued. Two techniques were rendered in headless Chrome at 2 and 3 columns across 4–8 items. Gap-as-hairline (container background showing through a 1px grid gap) leaves a 1px doubled line at the container's bottom edge, and — worse — paints the empty slot of a ragged last row as a SOLID line-coloured block hundreds of pixels wide. Explicit cell borders measured 0px doubling on both edges.",
+    "technique": "explicit-cell-borders",
+    "container": [
+      "border-top",
+      "border-left"
+    ],
+    "cell": [
+      "border-right",
+      "border-bottom"
+    ],
+    "rejected": {
+      "technique": "grid-gap-as-hairline",
+      "reason": "1px doubled hairline at the container's bottom edge, and the ragged remainder paints as a filled block rather than reading as empty"
+    },
+    "doublingToleranceCss": 0
+  },
+  "raggedRow": {
+    "$comment": "THE LAW THIS COMPONENT EXISTS FOR. When the item count is not a multiple of the column count the last row is short, so the matrix's right edge runs past the last cell and the frame hangs open. Measured: 3 columns × 5 items leaves 329px open, 3 × 4 leaves 657px, 2 × 5 leaves 493px. With 4–8 items in 2 or 3 columns this is the COMMON case, not the edge case. CSS cannot fix it — CSS cannot count the items to know the remainder — so the emitter completes the row.",
+    "strategy": "filler-cells",
+    "fillerAttributes": {
+      "aria-hidden": "true",
+      "data-spec-filler": "<column counts this filler serves>"
+    },
+    "fillerCarriesContent": false,
+    "maxOpenEdgePx": 0,
+    "breakpointAware": true,
+    "breakpointAwareNote": "Collapsing changes the remainder — 8 items need one filler at 3 columns and none at 2 — so a count baked for the authored width goes ragged again the moment the grid collapses. The emitter marks each filler with every column count it serves and each breakpoint shows only its own, which keeps ONE set of markup correct at all three widths.",
+    "rejected": [
+      {
+        "strategy": "span-remainder",
+        "reason": "a last cell stretched across two tracks is no longer comparable to its peers, and comparability is the entire point of the matrix"
+      },
+      {
+        "strategy": "restrict-counts",
+        "reason": "would forbid 5 and 7 items outright, and both sit inside the specified 4–8 range"
+      }
+    ]
+  },
+  "anatomy": {
+    "$comment": "Mono index, grot title, compact body. The index is a label, not a badge: no disc, no circle, no fill. Circular numbered badges are what the card contract (#67) already refused, for the same reason — they read as icon containers.",
+    "index": {
+      "class": "lg-spec-index",
+      "font": "--lg-mono",
+      "colour": "--lg-text-2",
+      "shape": "bare",
+      "shapeNote": "no disc, ring, fill or radius"
+    },
+    "title": {
+      "class": "lg-spec-title",
+      "font": "--lg-grot",
+      "colour": "--lg-text"
+    },
+    "body": {
+      "class": "lg-spec-body",
+      "font": "--lg-grot",
+      "colour": "--lg-text-2"
+    },
+    "pictogram": {
+      "class": "lg-spec-pictogram",
+      "optional": true,
+      "family": "canonical-frontira-pictograms",
+      "replacesIndex": true,
+      "replacesIndexNote": "A pictogram takes the leading slot INSTEAD of the index, never beside it. Same law as the card contract: the leading slot holds a position or an identity, never both."
+    }
+  },
+  "surface": {
+    "$comment": "Hairlines instead of filled cards. The non-goals in #46 are explicit: no shadows, no fills, no floating panels, no decorative radius.",
+    "background": "transparent",
+    "forbidden": [
+      "box-shadow",
+      "border-radius",
+      "background-color on cells",
+      "elevation"
+    ],
+    "radiusToleranceCss": 0
+  },
+  "accessibility": {
+    "$comment": "Reading order is DOM order, which is why the fillers go last and are hidden. A screen reader that meets an empty cell mid-set has been told the set has a hole in it.",
+    "readingOrder": "dom-order",
+    "fillersHidden": true,
+    "listSemantics": true,
+    "listSemanticsNote": "The grid is a list of comparable items, so it emits ul/li. Reordering by CSS is forbidden — grid auto-placement follows DOM order and nothing overrides it.",
+    "cssReorderingForbidden": [
+      "order",
+      "grid-auto-flow: dense",
+      "direction: rtl"
+    ],
+    "bodyContrastFloor": 4.5,
+    "contrastNote": "Supporting copy is muted, not decorative. 4.5:1 in both registers is a measurable claim, and --lg-text-2 is what has to hold it."
+  }
+}

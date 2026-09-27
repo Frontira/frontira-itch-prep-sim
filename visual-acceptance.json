@@ -1,0 +1,52 @@
+{
+  "contractVersion": 1,
+  "route": "/visual-acceptance",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "expectedRootClass": "lg-ink",
+  "registers": {
+    "ink": ["html.lg-ink"],
+    "paper": ["[data-visual-paper]"],
+    "accent": ["[data-visual-accent]"]
+  },
+  "criticalLandmarks": ["main", "h1", "[data-visual-paper]"],
+  "layers": [
+    {
+      "selector": "[data-visual-atmosphere]",
+      "minOpacity": 0.2,
+      "minZIndex": 0
+    }
+  ],
+  "requiredAssets": [],
+  "focusableSelector": "button, a[href], input, select, textarea, [tabindex]:not([tabindex=\"-1\"])",
+  "contrastPairs": [
+    {
+      "foreground": "[data-visual-hero-copy]",
+      "background": "main",
+      "minRatio": 4.5
+    },
+    {
+      "foreground": "[data-visual-paper-copy]",
+      "background": "[data-visual-paper]",
+      "minRatio": 4.5
+    },
+    {
+      "foreground": "button",
+      "background": "button",
+      "minRatio": 4.5
+    }
+  ],
+  "reducedMotionSelectors": ["[data-visual-motion]"],
+  "baseline": null,
+  "profileId": "frontira-ledger-4-8"
+}

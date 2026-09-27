@@ -1,0 +1,668 @@
+/* ==========================================================================
+   FRONTIRA APPLICATION COMPONENTS · contract v1
+
+   Framework-neutral Ledger skin for shadcn/Radix or native component
+   behaviour. See app-components.json for the supported API.
+   ========================================================================== */
+
+@import "./app-tailwind4.css";
+@import "./pictograms.css";
+@import "./control-glyphs.css";
+@import "./app-cards.css";
+
+@keyframes lg-app-spin {
+  to { transform: rotate(1turn); }
+}
+
+@keyframes lg-app-skeleton {
+  to { background-position: -200% 0; }
+}
+
+@keyframes lg-app-enter {
+  from { opacity: 0; transform: translateY(6px) scale(.99); }
+}
+
+@layer components {
+  :where(
+    [data-ledger-ui="button"],
+    [data-ledger-ui="input"],
+    [data-ledger-ui="textarea"],
+    [data-ledger-ui="select"]
+  ) {
+    box-sizing: border-box;
+    font-family: var(--lg-grot);
+    font-size: 14px;
+    line-height: var(--lg-ctrl-lh);
+    border-radius: var(--lg-r-6);
+  }
+
+  [data-ledger-ui="button"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    height: var(--lg-ctrl-h);
+    padding: 0 20px;
+    border: 1px solid transparent;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      transform var(--lg-t-300) var(--lg-ease),
+      box-shadow var(--lg-t-300) var(--lg-ease),
+      border-color var(--lg-t-100) var(--lg-ease),
+      background-color var(--lg-t-100) var(--lg-ease);
+  }
+
+  [data-ledger-ui="button"] > .fr-control-glyph {
+    --fr-control-glyph-size: 16px;
+  }
+
+  [data-ledger-ui="button"][data-size="sm"] > .fr-control-glyph {
+    --fr-control-glyph-size: 12px;
+  }
+
+  [data-ledger-ui="button"][data-size="sm"] {
+    height: var(--lg-ctrl-h-sm);
+    padding-inline: 14px;
+    font-size: 13px;
+  }
+
+  [data-ledger-ui="button"][data-size="icon"] {
+    width: var(--lg-ctrl-h);
+    padding: 0;
+  }
+
+  [data-ledger-ui="button"][data-size="icon"] > .fr-control-glyph {
+    --fr-control-glyph-size: 20px;
+  }
+
+  [data-ledger-ui="button"][data-variant="secondary"] {
+    border-color: var(--border);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    font-weight: 500;
+  }
+
+  [data-ledger-ui="button"][data-variant="ghost"] {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  [data-ledger-ui="button"][data-variant="destructive"] {
+    background: var(--destructive);
+    color: var(--destructive-foreground);
+  }
+
+  [data-ledger-ui="button"]:is(:hover, [data-demo-state="hover"]) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+
+  [data-ledger-ui="button"][data-variant="ghost"]:is(:hover, [data-demo-state="hover"]),
+  [data-ledger-ui="button"][data-variant="secondary"]:is(:hover, [data-demo-state="hover"]) {
+    border-color: var(--ring);
+    background: var(--accent);
+    color: var(--accent-foreground);
+    box-shadow: none;
+  }
+
+  [data-ledger-ui="button"]:is(:active, [data-demo-state="active"]) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  :where(
+    [data-ledger-ui="button"],
+    [data-ledger-ui="input"],
+    [data-ledger-ui="textarea"],
+    [data-ledger-ui="select"],
+    [data-ledger-ui="checkbox"],
+    [data-ledger-ui="card"],
+    [data-ledger-ui="nav-item"],
+    [data-ledger-ui="link"]
+  ):is(:focus-visible, [data-demo-state="focus"]) {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  [data-ledger-ui="button"]:is(:disabled, [aria-disabled="true"]),
+  [data-ledger-ui="input"]:disabled,
+  [data-ledger-ui="textarea"]:disabled,
+  [data-ledger-ui="select"]:disabled,
+  [data-ledger-ui="checkbox"][aria-disabled="true"],
+  [data-ledger-ui="nav-item"][aria-disabled="true"],
+  [data-ledger-ui="link"][aria-disabled="true"] {
+    opacity: .45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  [data-ledger-ui="button"][data-state="loading"]:not(:has(.fr-control-glyph))::before {
+    content: "";
+    width: 13px;
+    height: 13px;
+    box-sizing: border-box;
+    border: 1.5px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: lg-app-spin var(--lg-t-600) linear infinite;
+  }
+
+  :where(
+    [data-ledger-ui="input"],
+    [data-ledger-ui="textarea"],
+    [data-ledger-ui="select"]
+  ) {
+    display: block;
+    width: 100%;
+    height: var(--lg-ctrl-h);
+    padding: 10px 13px;
+    appearance: none;
+    border: 1px solid var(--input);
+    background: var(--background);
+    color: var(--foreground);
+    transition: border-color var(--lg-t-100) var(--lg-ease);
+  }
+
+  [data-ledger-ui="textarea"] {
+    height: auto;
+    min-height: 96px;
+    resize: vertical;
+  }
+
+  select[data-ledger-ui="select"] {
+    padding-right: 38px;
+    background-image:
+      linear-gradient(45deg, transparent calc(50% - .75px), var(--muted-foreground) calc(50% - .75px), var(--muted-foreground) calc(50% + .75px), transparent calc(50% + .75px)),
+      linear-gradient(135deg, transparent calc(50% - .75px), var(--muted-foreground) calc(50% - .75px), var(--muted-foreground) calc(50% + .75px), transparent calc(50% + .75px));
+    background-position: right 19.5px center, right 14px center;
+    background-repeat: no-repeat;
+    background-size: 5.5px 7px;
+  }
+
+  button[data-ledger-ui="select"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  [data-ledger-ui="select"] > [data-slot="disclosure-glyph"] {
+    --fr-control-glyph-size: 12px;
+    margin-left: auto;
+    color: var(--muted-foreground);
+  }
+
+  :where(
+    [data-ledger-ui="input"],
+    [data-ledger-ui="textarea"],
+    [data-ledger-ui="select"]
+  ):is(:hover, [data-demo-state="hover"]) {
+    border-color: var(--ring);
+  }
+
+  :where(
+    [data-ledger-ui="input"],
+    [data-ledger-ui="textarea"],
+    [data-ledger-ui="select"]
+  )[aria-invalid="true"] {
+    border-color: var(--destructive);
+  }
+
+  [data-ledger-field] {
+    display: grid;
+    gap: 8px;
+  }
+
+  [data-ledger-field] > label,
+  [data-ledger-label],
+  [data-ledger-message] {
+    font-family: var(--lg-mono);
+    font-size: 10px;
+    line-height: 1.6;
+    letter-spacing: var(--lg-track-annot);
+    text-transform: uppercase;
+  }
+
+  [data-ledger-field] > label,
+  [data-ledger-label] {
+    color: var(--foreground);
+    font-weight: 500;
+  }
+
+  [data-ledger-message] {
+    color: var(--muted-foreground);
+  }
+
+  [data-ledger-message][data-tone="error"] {
+    color: var(--destructive);
+  }
+
+  [data-ledger-message][data-tone="error"]::before {
+    content: "×";
+    margin-right: 7px;
+  }
+
+  [data-ledger-ui="checkbox"] {
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid var(--input);
+    border-radius: var(--lg-r-3);
+    background: transparent;
+    color: var(--background);
+    cursor: pointer;
+    transition:
+      border-color var(--lg-t-100) var(--lg-ease),
+      background-color var(--lg-t-100) var(--lg-ease);
+  }
+
+  [data-ledger-ui="checkbox"]:is(:hover, [data-demo-state="hover"]) {
+    border-color: var(--ring);
+  }
+
+  [data-ledger-ui="checkbox"][data-state="checked"] {
+    border-color: var(--lg-accent);
+    background: var(--lg-accent);
+  }
+
+  [data-ledger-ui="checkbox"][data-state="checked"]:not(:has(.fr-control-glyph))::after {
+    content: "";
+    width: 4px;
+    height: 8px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-1px) rotate(45deg);
+  }
+
+  [data-ledger-ui="checkbox"] > [data-slot="indicator-glyph"] {
+    --fr-control-glyph-size: 12px;
+  }
+
+  [data-ledger-ui="status"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    border: 1px solid color-mix(in srgb, currentColor 42%, transparent);
+    border-radius: var(--lg-r-3);
+    font: 500 10px/1.2 var(--lg-mono);
+    letter-spacing: var(--lg-track-label);
+    text-transform: uppercase;
+  }
+
+  [data-ledger-ui="status"]:not(:has(.fr-control-glyph))::before,
+  [data-ledger-ui="alert"] [data-slot="lead"]:not(:has(.fr-control-glyph))::before {
+    font-weight: 500;
+    text-transform: none;
+  }
+
+  [data-ledger-ui="status"][data-tone="error"] {
+    color: var(--lg-err);
+    background: var(--lg-err-wash);
+  }
+
+  [data-ledger-ui="status"][data-tone="warning"] {
+    color: var(--lg-warn);
+    background: var(--lg-warn-wash);
+  }
+
+  [data-ledger-ui="status"][data-tone="success"] {
+    color: var(--lg-ok);
+    background: var(--lg-ok-wash);
+  }
+
+  [data-ledger-ui="status"][data-tone="info"] {
+    color: var(--lg-info);
+    background: var(--lg-info-wash);
+  }
+
+  [data-ledger-ui="status"][data-tone="error"]:not(:has(.fr-control-glyph))::before { content: "×"; }
+  [data-ledger-ui="status"][data-tone="warning"]:not(:has(.fr-control-glyph))::before { content: "!"; }
+  [data-ledger-ui="status"][data-tone="success"]:not(:has(.fr-control-glyph))::before { content: "✓"; }
+  [data-ledger-ui="status"][data-tone="info"]:not(:has(.fr-control-glyph))::before { content: "i"; }
+
+  [data-ledger-ui="status"] > [data-slot="leading-glyph"] {
+    --fr-control-glyph-size: 12px;
+  }
+
+  [data-ledger-ui="card"] {
+    display: block;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--lg-r-8);
+    background: var(--card);
+    color: var(--card-foreground);
+  }
+
+  [data-ledger-ui="card"][data-variant="raised"] {
+    background: var(--secondary);
+  }
+
+  [data-ledger-ui="card"][data-variant="interactive"] {
+    cursor: pointer;
+    transition:
+      transform var(--lg-t-300) var(--lg-ease),
+      border-color var(--lg-t-100) var(--lg-ease);
+  }
+
+  [data-ledger-ui="card"][data-variant="interactive"]:is(:hover, [data-demo-state="hover"]) {
+    border-color: var(--ring);
+    transform: translateY(-2px);
+  }
+
+  [data-ledger-ui="alert"] {
+    padding: 12px 15px;
+    border-left: 3px solid var(--foreground);
+    background: var(--secondary);
+    color: var(--muted-foreground);
+    font: 12.5px/1.6 var(--lg-grot);
+  }
+
+  [data-ledger-ui="alert"] [data-slot="lead"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 7px;
+    color: var(--foreground);
+    font: 500 10px/1.4 var(--lg-mono);
+    letter-spacing: var(--lg-track-annot);
+    text-transform: uppercase;
+  }
+
+  [data-ledger-ui="alert"][data-tone="error"] {
+    border-left-color: var(--lg-err);
+    background: var(--lg-err-wash);
+  }
+
+  [data-ledger-ui="alert"][data-tone="warning"] {
+    border-left-color: var(--lg-warn);
+    background: var(--lg-warn-wash);
+  }
+
+  [data-ledger-ui="alert"][data-tone="success"] {
+    border-left-color: var(--lg-ok);
+    background: var(--lg-ok-wash);
+  }
+
+  [data-ledger-ui="alert"][data-tone="info"] {
+    border-left-color: var(--lg-info);
+    background: var(--lg-info-wash);
+  }
+
+  [data-ledger-ui="alert"][data-tone="error"] [data-slot="lead"] { color: var(--lg-err); }
+  [data-ledger-ui="alert"][data-tone="warning"] [data-slot="lead"] { color: var(--lg-warn); }
+  [data-ledger-ui="alert"][data-tone="success"] [data-slot="lead"] { color: var(--lg-ok); }
+  [data-ledger-ui="alert"][data-tone="info"] [data-slot="lead"] { color: var(--lg-info); }
+
+  [data-ledger-ui="alert"][data-tone="error"] [data-slot="lead"]:not(:has(.fr-control-glyph))::before { content: "× "; }
+  [data-ledger-ui="alert"][data-tone="warning"] [data-slot="lead"]:not(:has(.fr-control-glyph))::before { content: "! "; }
+  [data-ledger-ui="alert"][data-tone="success"] [data-slot="lead"]:not(:has(.fr-control-glyph))::before { content: "✓ "; }
+  [data-ledger-ui="alert"][data-tone="info"] [data-slot="lead"]:not(:has(.fr-control-glyph))::before { content: "i "; }
+
+  [data-ledger-ui="alert"] [data-slot="leading-glyph"] {
+    --fr-control-glyph-size: 12px;
+  }
+
+  [data-ledger-ui="table"] {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--foreground);
+    font: 13px/1.4 var(--lg-grot);
+  }
+
+  [data-ledger-ui="table"] th {
+    padding: 0 12px 8px 0;
+    border-bottom: 2px solid var(--foreground);
+    color: var(--muted-foreground);
+    font: 500 10px/1.3 var(--lg-mono);
+    letter-spacing: var(--lg-track-label);
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  [data-ledger-ui="table-row"] td {
+    padding: 10px 12px 10px 0;
+    border-top: 1px solid var(--border);
+    transition: background-color var(--lg-t-100) var(--lg-ease);
+  }
+
+  [data-ledger-ui="table-row"]:first-child td {
+    border-top: 0;
+  }
+
+  [data-ledger-ui="table-row"]:is(:hover, [data-demo-state="hover"]) td,
+  [data-ledger-ui="table-row"][data-state="selected"] td {
+    background: var(--accent);
+  }
+
+  [data-ledger-ui="table"][data-density="dense"] [data-ledger-ui="table-row"] td {
+    padding-block: 7px;
+    font-size: 12px;
+  }
+
+  [data-ledger-ui="table"] :is(th, td):last-child {
+    padding-right: 0;
+    text-align: right;
+  }
+
+  [data-ledger-ui="dialog"],
+  [data-ledger-ui="sheet"] {
+    position: relative;
+    min-height: 220px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--lg-r-8);
+    background: var(--background);
+  }
+
+  :where([data-ledger-ui="dialog"], [data-ledger-ui="sheet"]) [data-slot="overlay"] {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--lg-ink-bg) 72%, transparent);
+  }
+
+  :where([data-ledger-ui="dialog"], [data-ledger-ui="sheet"]) [data-slot="content"] {
+    position: absolute;
+    z-index: 1;
+    padding: 20px;
+    border: 1px solid var(--border);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    animation: lg-app-enter var(--lg-t-300) var(--lg-ease) both;
+  }
+
+  :where([data-ledger-ui="dialog"], [data-ledger-ui="sheet"]) [data-slot="close-glyph"] {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+  }
+
+  [data-ledger-ui="dialog"] [data-slot="content"] {
+    inset: 50% auto auto 50%;
+    width: min(84%, 390px);
+    transform: translate(-50%, -50%);
+    border-radius: var(--lg-r-8);
+  }
+
+  [data-ledger-ui="sheet"] [data-slot="content"] {
+    inset: 0 0 0 auto;
+    width: min(76%, 360px);
+    border-width: 0 0 0 1px;
+  }
+
+  :where([data-ledger-ui="dialog"], [data-ledger-ui="sheet"]) [data-slot="title"] {
+    margin: 0 0 7px;
+    font: 500 18px/1.2 var(--lg-grot);
+  }
+
+  :where([data-ledger-ui="dialog"], [data-ledger-ui="sheet"]) [data-slot="description"] {
+    margin: 0;
+    color: var(--muted-foreground);
+    font: 12px/1.55 var(--lg-grot);
+  }
+
+  :where([data-ledger-ui="dialog"], [data-ledger-ui="sheet"]) [data-slot="actions"] {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  [data-ledger-ui="tooltip"] {
+    display: inline-flex;
+    max-width: 230px;
+    padding: 7px 10px;
+    border: 1px solid var(--sidebar-border);
+    border-radius: var(--lg-r-3);
+    background: var(--sidebar);
+    color: var(--sidebar-foreground);
+    font: 10px/1.4 var(--lg-mono);
+    letter-spacing: var(--lg-track-annot);
+    animation: lg-app-enter var(--lg-t-100) var(--lg-ease) both;
+  }
+
+  [data-ledger-ui="skeleton"] {
+    min-height: 12px;
+    border-radius: var(--lg-r-3);
+    background:
+      linear-gradient(
+        100deg,
+        var(--secondary) 20%,
+        var(--accent) 42%,
+        var(--secondary) 64%
+      );
+    background-size: 200% 100%;
+    animation: lg-app-skeleton 1.8s linear infinite;
+  }
+
+  [data-ledger-ui="progress"] {
+    height: 6px;
+    overflow: hidden;
+    border-radius: var(--lg-r-pill);
+    background: var(--secondary);
+  }
+
+  [data-ledger-ui="progress"] [data-slot="indicator"] {
+    display: block;
+    width: var(--ledger-progress, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary);
+    transition: width var(--lg-t-600) var(--lg-ease);
+  }
+
+  [data-ledger-ui="nav-item"] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--lg-ctrl-h-sm);
+    padding: 0 11px;
+    border: 1px solid transparent;
+    border-radius: var(--lg-r-6);
+    color: var(--muted-foreground);
+    font: 500 13px/1.2 var(--lg-grot);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--lg-t-100) var(--lg-ease),
+      color var(--lg-t-100) var(--lg-ease);
+  }
+
+  [data-ledger-ui="nav-item"] > .fr-control-glyph {
+    --fr-control-glyph-size: 16px;
+  }
+
+  [data-ledger-ui="link"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--lg-accent);
+    font: 500 13px/1.3 var(--lg-grot);
+    text-underline-offset: 3px;
+  }
+
+  [data-ledger-ui="link"] > .fr-control-glyph {
+    --fr-control-glyph-size: 12px;
+  }
+
+  [data-ledger-ui="nav-item"]:is(:hover, [data-demo-state="hover"]),
+  [data-ledger-ui="nav-item"][data-state="active"] {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  [data-motion="reduced"] *,
+  [data-motion="reduced"] *::before,
+  [data-motion="reduced"] *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ledger-ui],
+  [data-ledger-ui]::before,
+  [data-ledger-ui]::after,
+  [data-ledger-ui] *,
+  [data-ledger-ui] *::before,
+  [data-ledger-ui] *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+  }
+}
+
+/* ==========================================================================
+   ANCHOR-BUTTON CASCADE GUARD (#54)
+
+   THE DEFECT THIS EXISTS FOR
+   --------------------------
+   shadcn's `Button asChild` renders an anchor. A consuming application then
+   writes the most ordinary reset there is:
+
+       a { color: inherit; }
+
+   That rule is UNLAYERED. Everything above is inside `@layer components`, and
+   an unlayered declaration beats a layered one no matter how specific the
+   layered selector is — that is what cascade layers mean. So the anchor kept
+   the button's background and lost its foreground. Measured in production on
+   Frontira/frontira-agentic-ai:
+
+       ink   primary  #F2F2F2 on acid   #EAFF95  =  1.03:1
+       paper primary  #292929 on purple #6F43D5  =  2.38:1
+
+   Both are unreadable, and neither token was wrong: the resolved Ledger
+   variables were correct throughout. It is a cascade failure, not a token
+   failure, and the contract should make it hard to hit.
+
+   WHY THESE RULES SIT OUTSIDE THE LAYER
+   -------------------------------------
+   To beat an unlayered `a { color: inherit }` a rule must also be unlayered,
+   and then ordinary specificity decides. `[data-ledger-ui="button"]` is an
+   attribute selector (0,1,0); `a` is a type selector (0,0,1). The attribute
+   wins, so the foreground survives the reset with no `!important` and without
+   taking the whole button rule out of the layer — a consumer can still restyle
+   these buttons deliberately, because anything more specific still wins.
+
+   Only `color` is restated. Background, geometry, states and motion stay
+   layered where a consumer can override them cheaply; the foreground is the
+   one declaration whose loss is silently unreadable rather than visibly wrong.
+   ========================================================================== */
+[data-ledger-ui="button"] { color: var(--primary-foreground); }
+[data-ledger-ui="button"][data-variant="secondary"] { color: var(--secondary-foreground); }
+[data-ledger-ui="button"][data-variant="ghost"] { color: var(--foreground); }
+[data-ledger-ui="button"][data-variant="destructive"] { color: var(--destructive-foreground); }
+[data-ledger-ui="button"][data-variant="secondary"]:is(:hover, [data-demo-state="hover"]) {
+  color: var(--accent-foreground);
+}

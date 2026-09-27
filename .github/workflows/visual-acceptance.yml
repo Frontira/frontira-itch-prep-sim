@@ -1,0 +1,152 @@
+name: Visual acceptance
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  visual-acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm test:visual
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-acceptance
+          path: artifacts/visual-acceptance
+          if-no-files-found: error
+
+  # Two checkouts, so every path here is prefixed. That is the whole reason this job needs the
+  # care the sibling above does not: an action whose default input is a repository-root path
+  # finds nothing at the root, because the root holds only the two directories.
+  visual-upgrade-receipt:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: after
+      - id: detect
+        working-directory: after
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Compare the gate files by CONTENT, not by bytes. A byte comparison meant that
+          # reformatting either file started a full before-and-after Playwright capture: two
+          # installs, two builds, two browser runs, for a change in indentation.
+          #
+          # jq is preinstalled on ubuntu-latest, so this costs no setup step. It has to run
+          # before pnpm/action-setup anyway, which is why nothing here may assume the project's
+          # own toolchain.
+          #
+          # Checked rather than assumed: without jq every comparison would silently fall back to
+          # raw bytes, which is the behaviour this step exists to replace. A runner without it
+          # should say so, not quietly reinstate the defect.
+          command -v jq >/dev/null || {
+            echo "jq is required to compare the gate files by content." >&2
+            exit 1
+          }
+          canonical() {
+            # Three namespaced answers, never a bare string. absent/present/raw cannot collide, so
+            # a gate file whose literal content is the marker cannot read as a missing file, and an
+            # EMPTY file cannot read as an absent one. The rule this protects: the gate may skip a
+            # capture only when it has read both sides and they mean the same thing.
+            raw=$(git show "$1:$2" 2>/dev/null) || { printf 'absent:'; return 0; }
+            # Unparseable JSON is compared as raw bytes on purpose, and in its own namespace so a
+            # partial parse can never equal a full one. A malformed gate file must read as CHANGED
+            # and run the capture, never as unchanged and skip it silently.
+            if parsed=$(printf '%s' "$raw" | jq -S -c . 2>/dev/null); then
+              printf 'present:%s' "$parsed"
+            else
+              printf 'raw:%s' "$raw"
+            fi
+          }
+          upgrade=false
+          for file in design-system.lock.json visual-acceptance.json; do
+            if [ "$(canonical "$BASE_SHA" "$file")" != "$(canonical "$HEAD_SHA" "$file")" ]; then
+              upgrade=true
+            fi
+          done
+          echo "upgrade=$upgrade" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.detect.outputs.upgrade == 'true'
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: before
+      # package_json_file is REQUIRED here and its absence is why this job could never succeed.
+      # The input is resolved against GITHUB_WORKSPACE, whose only children are after/ and
+      # before/, so the default `package.json` matches nothing and the action exits with "No pnpm
+      # version is specified" before any later step runs. The version itself comes from
+      # packageManager in the project's own package.json, exactly as it does for the sibling job.
+      - uses: pnpm/action-setup@v4
+        if: steps.detect.outputs.upgrade == 'true'
+        with:
+          package_json_file: after/package.json
+      # No `cache: pnpm` here, deliberately: setup-node resolves the lockfile from the repository
+      # root, which holds none. Adding it would reintroduce this job's original failure in a
+      # different step.
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.upgrade == 'true'
+        with:
+          node-version: 24
+      - name: Verify the base revision has a visual gate
+        if: steps.detect.outputs.upgrade == 'true'
+        run: |
+          mkdir -p after/artifacts/visual-upgrade
+          if ! grep -q '"test:visual"' before/package.json; then
+            printf '%s\n' '{"passed":false,"warning":"The base revision has no visual gate; adopt a reviewed baseline before upgrading."}' > after/artifacts/visual-upgrade/acceptance-warning.json
+            exit 1
+          fi
+      - name: Install and capture before
+        if: steps.detect.outputs.upgrade == 'true'
+        working-directory: before
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          pnpm build
+          pnpm test:visual
+      - name: Install and capture after
+        if: steps.detect.outputs.upgrade == 'true'
+        working-directory: after
+        run: |
+          pnpm install --frozen-lockfile
+          # Installed for the after revision too, and not only in the before step above. Browsers
+          # live in a shared cache keyed by Playwright version, so this is a no-op when both sides
+          # pin the same one and the difference between a green run and "Executable doesn't exist"
+          # when an upgrade moves it.
+          pnpm exec playwright install --with-deps chromium
+          pnpm build
+          pnpm test:visual
+      - name: Compose upgrade receipt
+        if: steps.detect.outputs.upgrade == 'true'
+        working-directory: after
+        run: |
+          # The composer REFUSES rather than warns in six cases, and it throws before creating its
+          # output directory. So a legitimate gate change that alters the capture set — adding a
+          # viewport to visual-acceptance.json renames the captures — used to end as
+          # "No files were found with the provided path", which says nothing about the cause.
+          # Keeping its stderr in the artifact turns that into an explanation the operator can read
+          # without opening the run log. Written only on failure, so a passing receipt stays clean.
+          if ! node scripts/compose-visual-upgrade-receipt.mjs ../before . artifacts/visual-upgrade 2>compose-error.txt; then
+            mkdir -p artifacts/visual-upgrade
+            cp compose-error.txt artifacts/visual-upgrade/compose-error.txt
+            cat compose-error.txt >&2
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.detect.outputs.upgrade == 'true'
+        with:
+          name: visual-upgrade-receipt
+          path: after/artifacts/visual-upgrade
+          if-no-files-found: error

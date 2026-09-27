@@ -1,0 +1,98 @@
+{
+  "$comment": "Frontira brand identity contract (#60). General, not Open Graph scoped: the OG contract (assets/open-graph/contract.json) describes one canvas, and every other brand-bearing surface — app headers and footers, auth screens, document covers, presentation bookends, wallpapers — had no contract at all. That is what let a consumer set the official F beside a TYPESET 'frontira' and call it the identity.",
+  "version": "1.0.0",
+  "brand": {
+    "$comment": "The name is lowercase everywhere it is written as prose (assets/brand/writing.json). The MARK is a graphic and keeps its drawn form.",
+    "canonical": "frontira",
+    "case": "lowercase",
+    "cvp": "Liberating intelligent people from unintelligent work",
+    "cvpLanguage": "en",
+    "cvpAlwaysEnglish": true,
+    "cvpNote": "Settled 2026-07-25 and binding here: the CVP is a claim, not a sentence, and a claim that changes shape per market is not a claim. A German surface sets its headline and chrome in German and leaves the CVP untranslated."
+  },
+  "variants": {
+    "$comment": "Three, and the third is a composition rather than a file. There is no mark-plus-wordmark asset because the F mark IS the wordmark's own first glyph — measured, both carry an identical 14.87% monoline stroke — so setting them side by side prints the same F twice.",
+    "mark": {
+      "asset": "assets/brand/mark.svg",
+      "official": "assets/Frontira_F_Mark.svg",
+      "aspect": 0.578,
+      "minHeightPx": 16,
+      "carriesName": false,
+      "note": "The lettermark alone. It does not say the company's name, which is why the surface matrix restricts where it may stand in for the identity."
+    },
+    "wordmark": {
+      "asset": "assets/brand/wordmark.svg",
+      "official": "assets/Frontira_Logo_Vector.svg",
+      "aspect": 4.31,
+      "minHeightPx": 20,
+      "carriesName": true,
+      "note": "The default on brand-bearing surfaces. The name comes from the drawing, never from type."
+    },
+    "lockup": {
+      "composition": ["wordmark", "cvp"],
+      "assetPart": "wordmark",
+      "typesetPart": "cvp",
+      "minHeightPx": 20,
+      "minCvpFontPx": 11,
+      "carriesName": true,
+      "note": "The wordmark asset above the CVP, typeset in the brand grotesque. The NAME is still the official drawing; only the CVP is type, and the CVP is a sentence rather than the brand name, so setting it is not an approximation of anything.",
+      "cvpMaxWidthRule": "wordmark-width",
+      "cvpMaxWidthNote": "The CVP block is bounded by the wordmark's own rendered width, so the lockup stays one rectangle instead of a wordmark with a paragraph trailing off it."
+    }
+  },
+  "surfaces": {
+    "$comment": "The matrix that makes the header/footer and compact-icon decision deterministic, which is the acceptance criterion. `requires` is the minimum identity the surface must carry: a surface requiring `name` refuses the mark, because the mark does not say who this is.",
+    "appHeader": { "requires": "name", "allowed": ["wordmark", "lockup"], "note": "the primary identity of a running application" },
+    "appFooter": { "requires": "name", "allowed": ["wordmark", "lockup"] },
+    "authScreen": { "requires": "name", "allowed": ["wordmark", "lockup"], "note": "a sign-in screen is exactly where a user checks who they are handing credentials to" },
+    "documentCover": { "requires": "name", "allowed": ["wordmark", "lockup"] },
+    "presentationBookend": { "requires": "name", "allowed": ["wordmark", "lockup"] },
+    "marketingProminent": { "requires": "name", "allowed": ["wordmark", "lockup"] },
+    "favicon": { "requires": "mark", "allowed": ["mark"], "note": "16px of square: the wordmark cannot survive it" },
+    "appIcon": { "requires": "mark", "allowed": ["mark"] },
+    "avatar": { "requires": "mark", "allowed": ["mark"] },
+    "narrowNav": { "requires": "mark", "allowed": ["mark"], "note": "a collapsed rail, where the wordmark would be clipped rather than small" },
+    "minimalSignature": { "requires": "mark", "allowed": ["mark"], "note": "a deliberately quiet corner signature on a surface whose identity is already established elsewhere" }
+  },
+  "typesetApproximation": {
+    "$comment": "THE RULE #60 EXISTS FOR, and the one that has to be machine-checkable rather than advisory. Inside an identity slot the name is a drawing. Text spelling the brand name in that slot is an approximation of the wordmark however carefully it is styled, and it is the observed failure: the official F beside a typeset 'frontira'.",
+    "forbidden": true,
+    "rule": "An identity slot contains the official asset geometry. Text spelling the brand name inside an identity slot is a violation, whatever font it is set in.",
+    "appliesTo": "identity slots only",
+    "proseIsFine": true,
+    "proseNote": "Running copy may write frontira as often as it likes — that is the writing contract's business, not this one. The distinction is the slot: prose NAMES the company, an identity slot IS the company.",
+    "standaloneFBesideName": "The mark may sit beside prose that mentions the brand. It may not sit beside a typeset name acting as the identity — that composition is the lockup, and the lockup takes its name from the asset.",
+    "detection": "geometry-hash"
+  },
+  "clearSpace": {
+    "$comment": "Half the mark's width, on all four sides, scaled with the rendered identity rather than fixed in pixels.",
+    "rule": "half-mark-width",
+    "factorOfHeight": 0.289,
+    "factorNote": "half the mark's aspect (0.578 / 2), so clear space is expressed against the rendered HEIGHT, which is the dimension every variant shares."
+  },
+  "contrast": {
+    "$comment": "An identity is not decoration, so it is held to the 4.5:1 text floor rather than the 3:1 graphical-object floor. This is why the register-aware asset exists: the official wordmark is hardcoded #6F43D5, which measures 6.11:1 on paper but only 3.24:1 on ink #0A0A0F and 3.03:1 on ink raised.",
+    "floor": 4.5,
+    "floorRationale": "the identity is read, not glanced at",
+    "measuredOfficialPurple": { "onInk": 3.24, "onInkRaised": 3.03, "onPaper": 6.11, "onPaperSurface": 5.4 },
+    "registers": {
+      "ink": { "recommended": "--lg-text", "note": "the wordmark follows currentColor, so on ink it takes the register's own text colour at 17.64:1" },
+      "paper": { "recommended": "--lg-accent", "note": "purple on white is 6.11:1 and is the brand's own colour" }
+    }
+  },
+  "geometry": {
+    "$comment": "Pinned so a redrawn or re-exported asset cannot pass as the brand. Hashes are of the official path data alone, so a fill or an accessible name may change without breaking consumers.",
+    "markHash": "fb5ebbf235030455",
+    "wordmarkHash": "d56e181dcc6d12a6",
+    "strokeFractionOfHeight": 0.1487,
+    "hardFloorPx": 11,
+    "hardFloorNote": "measured: below 11px the monoline stroke falls under 1.5 device pixels and the letterforms break. Every minHeightPx above sits over this floor."
+  },
+  "accessibility": {
+    "accessibleName": "frontira",
+    "nameRequired": true,
+    "nameNote": "The identity carries its name for assistive technology. The official files ship a <title> but no role, so the derived assets add role=img and aria-label — a logo exposed as decorative tells a screen reader the page belongs to nobody.",
+    "decorativeAllowed": false,
+    "decorativeException": "A second, repeated instance of the identity on the same surface may be aria-hidden, so the name is not announced twice."
+  }
+}

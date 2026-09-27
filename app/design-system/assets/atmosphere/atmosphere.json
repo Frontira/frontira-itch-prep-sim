@@ -1,0 +1,235 @@
+{
+  "$comment": "The versioned application atmosphere grammar (#62). A page names a section job and a carrier; this file owns which pairings are legal, how loud a carrier may be, where copy is safe, and what motion is allowed. Consumers never copy raw gradients, SVG geometry or palette values: the CSS is @frontira/design-system/app-atmosphere, the terrain is the committed assets/atmosphere/survey-041.svg, and atmosphere.mjs turns a request into markup.",
+  "version": "1.1.0",
+  "registers": [
+    "ink",
+    "paper"
+  ],
+  "registerNote": "Every carrier resolves through register variables, so one attribute works on ink and paper. A carrier outside a register scope has no colours at all, which is why the check treats it as an error rather than a default.",
+  "carriers": {
+    "aurora": {
+      "note": "The ratified token aurora: four .lg-aurora-band spans riding --lg-aurora-* variables, masked on paper so the centre stays clear. This grammar does not restyle it; it only says where it is legal.",
+      "sections": [
+        "hero"
+      ],
+      "sectionsNote": "ONE aurora per page, hero-level only — the ratified governance in tokens/generated/ledger-tokens.css, carried here as data rather than silently amended.",
+      "motion": "ambient",
+      "staticState": "frozen",
+      "staticStateNote": "The reduced-motion kill leaves bands standing at their un-transformed inset boxes: a complete composition, not a snapshot mid-drift.",
+      "print": "removed",
+      "textSafe": {
+        "ink": {
+          "note": "three quiet bands; copy is safe anywhere the section's own layout puts it"
+        },
+        "paper": {
+          "x": 0.13,
+          "y": 0.2,
+          "width": 0.58,
+          "height": 0.52,
+          "note": "the inscribed rectangle of the token mask ellipse — body and muted text sit inside the clear centre"
+        }
+      },
+      "tiers": [
+        "section",
+        "focal"
+      ],
+      "tiersNote": "no quiet aurora: a clipped aurora strip is an unratified variant of the token composition"
+    },
+    "survey": {
+      "note": "The seeded house terrain as hairlines behind an argument. Static by law: a survey never animates. Strokes ride --lg-text, so the register re-inks them.",
+      "sections": [
+        "paper",
+        "proof",
+        "synthesis"
+      ],
+      "motion": "none",
+      "staticState": "identical",
+      "print": "prints-as-itself",
+      "asset": "assets/atmosphere/survey-041.svg",
+      "provenance": "assets/atmosphere/survey-041.json",
+      "clearVariants": [
+        "bottom",
+        "top",
+        "left"
+      ],
+      "textSafe": {
+        "bottom": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 0.42,
+          "note": "data-clear=bottom masks the terrain to nothing below 42% — copy lives in the top band"
+        },
+        "top": {
+          "x": 0,
+          "y": 0.58,
+          "width": 1,
+          "height": 0.42
+        },
+        "left": {
+          "x": 0,
+          "y": 0,
+          "width": 0.45,
+          "height": 1
+        }
+      },
+      "tiers": [
+        "quiet",
+        "section",
+        "focal"
+      ]
+    },
+    "grid": {
+      "note": "The technical grid: 1px lines of the register text colour at 3 percent, 48px cell. The numbers are the website hero-grid provenance exactly; the ink is color-mix over --lg-text, never a raw rgba.",
+      "sections": [
+        "proof",
+        "process"
+      ],
+      "motion": "none",
+      "staticState": "identical",
+      "print": "prints-as-itself",
+      "inkAlpha": 0.03,
+      "cellPx": 48,
+      "textSafe": {
+        "note": "3 percent hairlines carry no contrast cost; copy is safe everywhere. Controls still require a copy panel — texture behind a control is refused regardless of how quiet it is."
+      },
+      "tiers": [
+        "quiet",
+        "section"
+      ]
+    },
+    "beacons": {
+      "note": "Token glows standing on the committed terrain's own peaks. Static by default. Breathe is opt-in per composition (breathe: true) through the #56 motion grammar and spends limits.animatedPerPage exactly like the aurora; a composition that does not opt in keeps byte-identical output. Positions come from survey-041.json's peak table — a light off its summit is decoration.",
+      "sections": [
+        "process",
+        "synthesis"
+      ],
+      "motion": "none",
+      "staticState": "identical",
+      "print": "removed",
+      "asset": "assets/atmosphere/survey-041.json",
+      "textSafe": {
+        "x": 0,
+        "y": 0,
+        "width": 0.66,
+        "height": 0.5,
+        "note": "derived from the committed peak table, not from intent: seed 41 stands a light at (0.82, 0.43), so the safe region is the upper-LEFT block that clears both that glow and the 0.59-row summits"
+      },
+      "tiers": [
+        "section",
+        "focal"
+      ],
+      "tiersNote": "no quiet beacons: peak positions are fractions of the full terrain, and a clipped layer would stand lights off their summits",
+      "ambientOptIn": {
+        "loop": "breathe",
+        "scaleMax": 1.06,
+        "durationsSeconds": [
+          7,
+          11
+        ],
+        "curve": "ease-in-out",
+        "phase": "deterministic from peak index i: duration (7 + ((i * 3) % 5))s · delay -(((i * 71) % 100) / 100 × duration)s",
+        "staticState": "frozen",
+        "countsAgainst": "animatedPerPage",
+        "note": "The opt-in declares its own frozen contract: the from-frame equals the static state (centering translate at scale 1), so reduced motion and frozen capture show the identical complete composition. The shipped default fields above are untouched — a 4.3.0 composition renders byte-identically."
+      }
+    },
+    "band": {
+      "note": "The accent band: a full-width slab on the register-INDEPENDENT --lg-band-* tokens. It is a surface, not an overlay — the section itself turns deep purple and its text tokens flip with it. No pattern, no motion.",
+      "sections": [
+        "synthesis",
+        "closing"
+      ],
+      "motion": "none",
+      "staticState": "identical",
+      "print": "prints-as-itself",
+      "textSafe": {
+        "note": "the band is opaque; copy is safe everywhere on it"
+      },
+      "tiers": [
+        "section",
+        "focal"
+      ]
+    }
+  },
+  "sections": {
+    "hero": {
+      "allowed": [
+        "aurora",
+        "none"
+      ],
+      "default": "none"
+    },
+    "proof": {
+      "allowed": [
+        "grid",
+        "survey",
+        "none"
+      ],
+      "default": "none"
+    },
+    "paper": {
+      "allowed": [
+        "survey",
+        "none"
+      ],
+      "default": "none"
+    },
+    "process": {
+      "allowed": [
+        "grid",
+        "beacons",
+        "none"
+      ],
+      "default": "none"
+    },
+    "synthesis": {
+      "allowed": [
+        "band",
+        "survey",
+        "beacons",
+        "none"
+      ],
+      "default": "none"
+    },
+    "closing": {
+      "allowed": [
+        "band",
+        "none"
+      ],
+      "default": "none"
+    }
+  },
+  "sectionsNote": "'none' is in every allowed list and is every default: restraint is always legal, and it is the ABSENCE of a carrier, not an empty element. A section with no atmosphere child is a plain surface and needs no markup to say so.",
+  "tiers": {
+    "quiet": {
+      "coverage": "edge",
+      "note": "the carrier is clipped to one edge zone (a clear variant or the peak band); most of the surface is plain"
+    },
+    "section": {
+      "coverage": "full",
+      "note": "the carrier spans the section behind its own text-safe geometry"
+    },
+    "focal": {
+      "coverage": "full",
+      "perPage": 1,
+      "note": "one per page: the section the eye should land on. Focal is a budget, not a style — it changes what ELSE is allowed on the page, not the recipe"
+    }
+  },
+  "tiersNote": "Tiers are discrete geometry, never opacity multipliers. The survey's .22/.6 strokes, the aurora's band alphas and the grid's 3 percent are ratified, measured values; a tier that rescaled them would ship unratified variants of approved artwork.",
+  "limits": {
+    "perSurface": 1,
+    "perSurfaceNote": "One atmosphere per surface — the same slot law styles-ledger.css states for .lg-aurora and .lg-survey, and it counts legacy carriers too: a section carrying a legacy .lg-aurora AND a governed carrier is two atmospheres.",
+    "animatedPerPage": 1,
+    "focalPerPage": 1,
+    "consecutiveNonQuiet": 2,
+    "consecutiveNonQuietNote": "Three loud sections in a row read as wallpaper. After two non-quiet carriers the next section is plain or quiet."
+  },
+  "reserved": {
+    "dither": "the recipe exists twice (screen-backgrounds.html ditherLayer and presentation-backgrounds.mjs ditherPath, unexported) — consolidate to one exported source before it becomes an application carrier",
+    "orbit": "research-only; no ratified recipe",
+    "flow": "research-only; no ratified recipe",
+    "lens": "research-only; no ratified recipe"
+  },
+  "reservedNote": "A reserved name is refused by the validator with the reason above, so the next person reaches for the consolidation instead of a third copy of the recipe."
+}

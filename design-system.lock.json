@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "profileId": "frontira-ledger-4-8",
+  "applicationContract": 1,
+  "package": {
+    "name": "@frontira/design-system",
+    "version": "4.8.0",
+    "delivery": "vendored"
+  },
+  "sourceCommit": "08da97cb8395556d2d7bcd42a5f0c9f45d120271",
+  "integrity": "sha256-87cbf70d41fc0c2cdce5289d876cd12ea885867e79631550338b8fd5fcdd8737"
+}

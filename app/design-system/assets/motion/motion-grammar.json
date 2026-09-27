@@ -1,0 +1,144 @@
+{
+  "$comment": "The versioned application motion grammar (#56). Durations and the curve are generated tokens; this file owns which properties may animate where, the flow recipe's arithmetic, the ambient budget, the reduced-motion doctrine, and the named exemptions. A motion value not derivable from this file plus ledger-tokens is a defect, not a choice. Deliberately named motion-grammar: the motion/ directory is the HyperFrames video layer (one master clock, seekable, no wall time) and the two must not blur.",
+  "version": "1.0.0",
+  "governs": [
+    "app-components.css",
+    "app-motion.css",
+    "app-atmosphere.css",
+    "styles-ledger.css §5 token usage"
+  ],
+  "notGoverned": {
+    "index.js animation": "pre-Ledger website vocabulary; deprecated in 4.4.0, see compatibility.json",
+    "slide-base.css --f-stagger": "the deck layer; decks are rendered to PDF, not browsed",
+    "motion/": "HyperFrames video: one master clock, seekable, no wall time; governed by motion/contracts/*"
+  },
+  "tokens": {
+    "t100": {
+      "var": "--lg-t-100",
+      "ms": 100,
+      "role": "feedback · taps, toggles, control internals"
+    },
+    "t300": {
+      "var": "--lg-t-300",
+      "ms": 300,
+      "role": "transition · hover lifts, hairlines, surface tints"
+    },
+    "t600": {
+      "var": "--lg-t-600",
+      "ms": 600,
+      "role": "entrance · fadeUp, dialog enter, flow stages"
+    },
+    "t900": {
+      "var": "--lg-t-900",
+      "ms": 900,
+      "role": "narrative · the page's one expressive moment; the flow core"
+    },
+    "step": {
+      "var": "--lg-t-step",
+      "ms": 180,
+      "role": "workflow step state change (#68: 160-200ms)"
+    },
+    "stagger": {
+      "var": "--lg-t-stagger",
+      "ms": 80,
+      "role": "entrance list step"
+    },
+    "flowStep": {
+      "var": "--lg-t-flow-step",
+      "ms": 240,
+      "role": "narrative beat between flow stages"
+    },
+    "breathe": {
+      "var": "--lg-t-breathe",
+      "ms": 8000,
+      "role": "ambient settle pulse · the pinned centre of the ambient cycle family"
+    },
+    "ease": {
+      "var": "--lg-ease",
+      "value": "cubic-bezier(0.16, 1, 0.3, 1)"
+    }
+  },
+  "properties": {
+    "ui": [
+      "transform",
+      "opacity"
+    ],
+    "carrier": [
+      "transform"
+    ],
+    "note": "Compositor only, no layout properties. Carriers stay transform-only so the frozen state IS the composition; UI motion may also fade because a component has content a carrier does not."
+  },
+  "ambient": {
+    "minSeconds": 7,
+    "wholeSecondsOnly": true,
+    "curve": "ease-in-out",
+    "perViewport": 1,
+    "perViewportNote": "Must equal atmosphere.json limits.animatedPerPage: a breathing carrier and the aurora spend the same budget, and the two grammars keep one ledger between them."
+  },
+  "flow": {
+    "stagesMin": 3,
+    "stagesMax": 6,
+    "boundsNote": "Two is a toggle and seven is a process diagram; neither is the loop.",
+    "core": {
+      "durationVar": "--lg-t-900",
+      "delayMs": 0,
+      "scaleFrom": 0.82
+    },
+    "stage": {
+      "durationVar": "--lg-t-600",
+      "delayFormula": "t600 + i * flowStep",
+      "risePx": 8
+    },
+    "governed": {
+      "durationVar": "--lg-t-600",
+      "delayFormula": "t600 + n * flowStep"
+    },
+    "settle": [
+      "static"
+    ],
+    "settleNote": "v1 settles static only. A near-static pulse on the core is the named follow-up, and it ships WITH a rendered fixture spending the ambient budget or it does not ship: an unverified code path has no place in a contract whose whole point is rendered proof.",
+    "perPage": 1
+  },
+  "beacons": {
+    "scaleMax": 1.06,
+    "durationsSeconds": [
+      7,
+      11
+    ],
+    "curve": "ease-in-out",
+    "phase": "deterministic from peak index i: duration (7 + ((i * 3) % 5))s · delay -(((i * 71) % 100) / 100 × duration)s",
+    "phaseNote": "The breathe token is the pinned centre of this family: validateMotionManifest asserts it lies inside durationsSeconds, so the token cannot drift away from the cycles it names."
+  },
+  "reducedMotion": "final-state: prefers-reduced-motion renders the composed end state immediately; no sequencing, no loops, nothing hidden; kills are scoped to governed roots, never a page-global star",
+  "trigger": "one host-added class, is-flowing, from the published MOTION_TRIGGER_SNIPPET; the snippet arms the page by stamping data-motion-armed on the root BEFORE observing, so pre-reveal hiding exists only while an observer is demonstrably watching. Without the snippet nothing is ever hidden. Scroll-driven animation-timeline: view() is verified working in headless Chrome but scrubs with scroll — a narrative sequence must not run backwards when the user scrolls up — so it stays a documented option for simple reveals, never the flow's trigger.",
+  "exemptions": [
+    {
+      "animation": "lg-app-spin",
+      "allows": [
+        "easing:linear"
+      ],
+      "reason": "a spinner reads only at constant angular velocity"
+    },
+    {
+      "animation": "lg-app-skeleton",
+      "allows": [
+        "property:background-position",
+        "easing:linear",
+        "duration:1.8s"
+      ],
+      "reason": "shipped in components v1; the rewrite to a translated gradient layer is a named follow-up, not a silent grandfather"
+    },
+    {
+      "transition": "progress-indicator",
+      "allows": [
+        "property:width"
+      ],
+      "reason": "shipped in components v1; a scaleX refactor breaks consumers reading the bar's box"
+    }
+  ],
+  "limits": {
+    "flowsPerPage": 1,
+    "ambientPerViewport": 1,
+    "headlineMotionDuringFlow": 0
+  }
+}

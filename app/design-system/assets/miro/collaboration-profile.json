@@ -1,0 +1,231 @@
+{
+  "$comment": "Ledger collaboration-surface profile for Miro (#39). Ledger had treatments for presentations, documents, application UI and social, but none for a whiteboard — a surface whose job is scanning, writing, moving, clustering and deciding rather than being read. The observed failure was an agent session rendering a Ledger canvas to a PNG and pasting it onto a frame: the SPAR Scoping Canvas board contains exactly two items, a frame and one 6306x2660 image, so its 'empty client-input zones for participant stickies' are painted rectangles and nothing on it can be moved.",
+  "version": "1.0.0",
+  "register": {
+    "$comment": "Paper-first. A workshop board is a working surface people write on, and Ledger's ink register would make it a dark, dense room.",
+    "default": "paper",
+    "background": "#FFFFFF",
+    "surface": "#F0F1F2",
+    "text": "#292929",
+    "muted": "#66676C",
+    "hairline": "#E1E2E6",
+    "border": "#C9CBD0"
+  },
+  "layers": {
+    "$comment": "THE STRUCTURAL LAW, and it is forced by measurement rather than chosen. Miro's API refuses a hex fill on a sticky note: POST returns 400 with code 2.0703, 'Unexpected value [#6F43D5], expected one of: [gray, light_yellow, ...]'. So the surface splits in two, and each half gets the strongest rule it can actually keep.",
+    "scaffolding": {
+      "note": "Authored before the session: frames, shapes, connectors, section headers, instructions. These accept arbitrary colour, so they carry Ledger hex exactly and nothing is approximated.",
+      "objects": [
+        "frame",
+        "shape",
+        "connector",
+        "text"
+      ],
+      "colour": "ledger-hex",
+      "editableInSession": false
+    },
+    "participant": {
+      "note": "Created during the session: sticky notes. Locked to a fixed palette, so the mapping is SEMANTIC — the named colour that carries the role — and never a claim of pixel parity.",
+      "objects": [
+        "sticky_note"
+      ],
+      "colour": "miro-named",
+      "editableInSession": true
+    }
+  },
+  "stickyPalette": {
+    "$comment": "Miro's own enum, transcribed verbatim from the API's 400 response on 2026-08-08. Pinned here so a profile that invents a colour fails before anyone builds a board with it.",
+    "source": "Miro API error 2.0703, field style.fillColor",
+    "allowed": [
+      "gray",
+      "light_yellow",
+      "yellow",
+      "orange",
+      "light_green",
+      "green",
+      "dark_green",
+      "cyan",
+      "light_pink",
+      "pink",
+      "violet",
+      "red",
+      "light_blue",
+      "blue",
+      "dark_blue",
+      "black"
+    ],
+    "hexAccepted": false
+  },
+  "roles": {
+    "$comment": "The four semantic roles #39 names, plus the documented exception for gaps. Each pins the Ledger token it represents AND the Miro sticky it becomes, so the two halves of the surface stay tied to one meaning.",
+    "framing": {
+      "meaning": "framing, anchors, decision rights, the V1 boundary",
+      "ledgerToken": "palette.purple",
+      "ledgerHex": "#6F43D5",
+      "sticky": "violet",
+      "authoredBy": "facilitator"
+    },
+    "system": {
+      "meaning": "live workflow, systems, data and connections",
+      "ledgerToken": "palette.cyan",
+      "ledgerHex": "#8BDDD3",
+      "sticky": "cyan",
+      "authoredBy": "either",
+      "cyanNote": "Ledger forbids cyan as text on white. That rule is about TYPE, and a sticky fill is not type — the constraint survives because Miro sets sticky text itself and never sets it in cyan."
+    },
+    "action": {
+      "meaning": "actions, commitments and unresolved decisions",
+      "ledgerToken": "palette.acid",
+      "ledgerHex": "#EAFF95",
+      "sticky": "light_yellow",
+      "authoredBy": "either"
+    },
+    "input": {
+      "meaning": "participant input, supporting evidence, out-of-scope material",
+      "ledgerToken": "neutral.paper.surface",
+      "ledgerHex": "#F0F1F2",
+      "sticky": "gray",
+      "authoredBy": "participant",
+      "defaultNote": "The colour a participant reaches for without being told. It is deliberately the neutral, so an unlabelled sticky reads as raw input rather than as a decision."
+    },
+    "gap": {
+      "meaning": "gaps and risks",
+      "ledgerToken": null,
+      "ledgerHex": null,
+      "sticky": "red",
+      "authoredBy": "either",
+      "exception": true,
+      "exceptionNote": "#39 forbids inventing a new Ledger core colour for gaps, so this is a documented MIRO-NATIVE exception: red exists in Miro's palette, is universally read as risk, and enters no Ledger token file. Ledger's own status red (#BA4837) governs receipts, not whiteboards."
+    }
+  },
+  "typography": {
+    "$comment": "Ledger's three families, with the fallback each role degrades to. Sticky typography is a platform constraint and NOT a Ledger defect: the API exposes no font, size, weight or colour on a sticky note, so the profile does not pretend otherwise.",
+    "frameTitle": {
+      "family": "Instrument Serif",
+      "role": "editorial frame titles",
+      "miroFallback": "the board default serif, or Miro's default if unavailable"
+    },
+    "instruction": {
+      "family": "Space Grotesk",
+      "role": "instructions and structured labels",
+      "miroFallback": "Miro default sans"
+    },
+    "metadata": {
+      "family": "JetBrains Mono",
+      "role": "metadata, numbering and status labels",
+      "miroFallback": "Miro default monospace"
+    },
+    "stickyText": {
+      "controllable": false,
+      "note": "No font, size, weight or colour is settable on a sticky through the API. Miro assigns the text colour against its own fill, so the 4.5:1 floor on a sticky is Miro's to meet, not Ledger's to enforce.",
+      "forbidden": "forcing custom typography onto sticky notes"
+    }
+  },
+  "objectGrammar": {
+    "$comment": "What each object is FOR, and what is locked before a session begins. The lock column is the part that matters: a canvas whose scaffolding participants can drag is a canvas that will not survive its first workshop.",
+    "frame": {
+      "carries": "one zone of the canvas, titled",
+      "locked": true
+    },
+    "sectionHeader": {
+      "carries": "the zone's question, in Space Grotesk",
+      "locked": true
+    },
+    "instruction": {
+      "carries": "what a participant should do in this zone",
+      "locked": true
+    },
+    "facilitatorExample": {
+      "carries": "one worked example sticky, visibly distinct from participant input",
+      "locked": true
+    },
+    "participantSticky": {
+      "carries": "one observation, one idea, one vote",
+      "locked": false
+    },
+    "decision": {
+      "carries": "a resolved claim, in the framing role",
+      "locked": false
+    },
+    "action": {
+      "carries": "a commitment with an owner",
+      "locked": false
+    },
+    "connector": {
+      "carries": "a stated relationship, never decoration",
+      "locked": true
+    },
+    "scopeMarker": {
+      "carries": "the V1 boundary",
+      "locked": true
+    }
+  },
+  "prohibitions": {
+    "$comment": "The failure this profile exists to prevent, stated as a rule rather than as advice.",
+    "flattenedCanvasImage": {
+      "forbidden": true,
+      "note": "A rendered Ledger canvas pasted as one image is not a board. It cannot be moved, clustered, written on or voted on, which removes every affordance a workshop needs — and it is what the SPAR Scoping Canvas does today. If the native objects cannot express a canvas, the profile is wrong and should change; the image is not the escape hatch."
+    },
+    "presentationGradients": {
+      "forbidden": true,
+      "note": "aurora, gradients and motion belong to authored surfaces, not to a working board"
+    },
+    "corePaletteChange": {
+      "forbidden": true,
+      "note": "no Ledger token changes solely to accommodate Miro"
+    },
+    "organizationWideFontChange": {
+      "forbidden": true,
+      "note": "see brandCenter"
+    }
+  },
+  "brandCenter": {
+    "$comment": "#40's governance boundary, restated here because it is the part that can quietly go wrong.",
+    "scope": "organization-wide",
+    "warning": "Brand Center configuration affects every team and every board in the organization, including client-facing ones. Installing fonts or changing defaults is not a per-board decision and is not reversible per board.",
+    "requiresHumanAction": true,
+    "requiresHumanActionNote": "Font installation and default changes are performed by a person with Brand Center admin rights, never automated from this package.",
+    "fontsPresent": false,
+    "coloursPresent": true
+  },
+  "referenceUseCase": {
+    "$comment": "#39's named reference: the SPAR Aktionsrundschreiben scoping canvas, adapted from the Strategyzer Problem Framing Map.",
+    "name": "SPAR Problem Framing canvas",
+    "zones": [
+      "stakeholders and decision rights",
+      "workflow or work to be accomplished",
+      "current reality: gaps and bright spots",
+      "systems and data reality",
+      "desired outcomes",
+      "success metrics",
+      "V1 boundary, decisions and actions"
+    ],
+    "requirement": "representable with the roles above and no board-specific visual overrides"
+  },
+  "verification": {
+    "$comment": "What can be checked offline and what genuinely cannot. Contrast on a sticky is the honest gap: Miro returns the colour NAME, never a hex, so the rendered value is not available to this package.",
+    "offline": [
+      "token cross-pin",
+      "palette enum",
+      "role completeness",
+      "grammar lock rules"
+    ],
+    "requiresLiveBoard": [
+      "object inventory",
+      "no flattened canvas image"
+    ],
+    "requiresHumanReview": [
+      "role distinguishability at workshop zoom",
+      "sticky text contrast"
+    ],
+    "humanReviewNote": "Miro assigns sticky text colour and does not expose it, so Ledger cannot measure the 4.5:1 floor on a sticky. It is reviewed by a person and recorded, not asserted.",
+    "humanReview": {
+      "status": "recorded",
+      "date": "2026-08-08",
+      "reviewer": "Stefan Erschwendner",
+      "board": "uXjVHzkhzQU=",
+      "outcome": "The five roles read as distinct at normal workshop zoom, and sticky text is legible on each fill.",
+      "note": "Recorded rather than asserted. Miro returns the colour NAME and never the hex it paints, so this package cannot measure the 4.5:1 floor on a sticky — a person looked, and this is what they saw. A change to the role/colour mapping invalidates this record and needs a fresh look."
+    }
+  }
+}

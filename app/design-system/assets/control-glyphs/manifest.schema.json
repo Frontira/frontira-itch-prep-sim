@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://frontira.com/schemas/control-glyph-manifest.schema.json",
+  "title": "Frontira Control Glyph Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "status", "family", "defaults", "slots", "glyphs"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "status": { "enum": ["selected", "deprecated"] },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "package", "version", "weight", "license", "source", "viewBox"],
+      "properties": {
+        "provider": { "const": "Phosphor" },
+        "package": { "const": "@phosphor-icons/core" },
+        "version": { "const": "2.1.1" },
+        "weight": { "const": "regular" },
+        "license": { "const": "MIT" },
+        "source": { "type": "string", "format": "uri" },
+        "viewBox": { "const": "0 0 256 256" }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["size", "sizes", "minimumHitTarget", "color", "accessibility", "reducedMotion"],
+      "properties": {
+        "size": { "const": 16 },
+        "sizes": { "const": [12, 16, 20] },
+        "minimumHitTarget": { "minimum": 44, "type": "integer" },
+        "color": { "const": "currentColor" },
+        "accessibility": { "type": "string", "minLength": 1 },
+        "reducedMotion": { "type": "string", "minLength": 1 }
+      }
+    },
+    "slots": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "glyphs": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^(?:control|state)\\.[a-z][a-z0-9-]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "providerIcon", "usage", "slots", "animated"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "providerIcon": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "usage": { "type": "string", "minLength": 1 },
+          "slots": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*$" }
+          },
+          "animated": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

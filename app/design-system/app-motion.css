@@ -1,0 +1,146 @@
+/* ==========================================================================
+   FRONTIRA APPLICATION MOTION · v1  (#56)
+
+   The system-flow recipe and the page-level motion hooks. Everything here
+   rides the generated motion tokens — four durations, three narrative steps,
+   one curve, nothing bounces — and the laws live as data + code in
+   assets/motion/motion-grammar.json + motion-grammar.mjs. This file only
+   moves things.
+
+   THE RECIPE. A flow host carries data-ledger-motion="flow" and three
+   children emitted by flowFor(): the core, an <ol> of 3–6 consumer-labelled
+   stages, and the governed line. When the host gains .is-flowing the core
+   becomes present (900ms), each stage signals once in order (600ms, one
+   240ms beat apart), and the governed line resolves LAST — one beat after
+   the final stage, for any stage count. Then the composition stands still.
+
+   STATIC BY DEFAULT. Resting styles below are the FINAL state, and no rule
+   in this file hides content unless the published trigger snippet has
+   demonstrably run: the snippet stamps data-motion-armed on the root BEFORE
+   observing, and the armed-hidden rule keys on that stamp — never on
+   html.js. A consumer who loads this stylesheet and forgets the snippet
+   ships a static diagram, not an invisible one.
+   ========================================================================== */
+
+@layer components {
+  [data-ledger-motion="flow"] {
+    --lg-flow-n: 4;
+    position: relative;
+    display: grid;
+    gap: 22px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .lg-flow-core {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      color-mix(in srgb, var(--lg-accent) 34%, transparent) 0%,
+      color-mix(in srgb, var(--lg-accent) 10%, transparent) 45%,
+      transparent 70%);
+  }
+
+  .lg-flow-stages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    justify-content: center;
+    counter-reset: lg-flow;
+  }
+  .lg-flow-stage {
+    font-family: var(--lg-mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--lg-text-2);
+    counter-increment: lg-flow;
+  }
+  .lg-flow-stage::before {
+    content: counter(lg-flow, decimal-leading-zero) " · ";
+    color: var(--lg-text-2);
+  }
+  .lg-flow-governed {
+    margin: 0;
+    color: var(--lg-text);
+  }
+
+  /* Stage index ladder: markup order IS sequence order, so hand-written
+     consumer markup carries no counters. Six rungs because six is the
+     maximum stage count. */
+  .lg-flow-stages > :nth-child(1) { --lg-flow-i: 0; }
+  .lg-flow-stages > :nth-child(2) { --lg-flow-i: 1; }
+  .lg-flow-stages > :nth-child(3) { --lg-flow-i: 2; }
+  .lg-flow-stages > :nth-child(4) { --lg-flow-i: 3; }
+  .lg-flow-stages > :nth-child(5) { --lg-flow-i: 4; }
+  .lg-flow-stages > :nth-child(6) { --lg-flow-i: 5; }
+
+  /* THE SEQUENCE. Every animation fills both from a hidden from-frame, so
+     the element's resting styles are the end state and nothing here needs a
+     separate final-state rule. Arithmetic the check asserts: core 0–900ms;
+     stage i starts at 600 + i×240ms; governed starts at 600 + n×240ms —
+     one beat after the last stage, for any n, which is what "the governed
+     state resolves last" means executably. */
+  [data-ledger-motion="flow"].is-flowing .lg-flow-core {
+    animation: lg-flow-core var(--lg-t-900) var(--lg-ease) both;
+  }
+  [data-ledger-motion="flow"].is-flowing .lg-flow-stage {
+    animation: lg-flow-stage var(--lg-t-600) var(--lg-ease) both;
+    animation-delay: calc(var(--lg-t-600) + var(--lg-flow-i, 0) * var(--lg-t-flow-step));
+  }
+  [data-ledger-motion="flow"].is-flowing .lg-flow-governed {
+    animation: lg-flow-stage var(--lg-t-600) var(--lg-ease) both;
+    animation-delay: calc(var(--lg-t-600) + var(--lg-flow-n, 4) * var(--lg-t-flow-step));
+  }
+
+  /* ARMED, NOT YET FIRED — the only rule that hides anything, and it can
+     only match after the trigger snippet stamped the root. Guarded by the
+     media query too: under reduced motion the snippet plays immediately and
+     this rule must never apply. */
+  @media (prefers-reduced-motion: no-preference) {
+    html[data-motion-armed] [data-ledger-motion="flow"]:not(.is-flowing):not([data-motion-static])
+      :is(.lg-flow-core, .lg-flow-stage, .lg-flow-governed) {
+      opacity: 0;
+    }
+  }
+
+  @keyframes lg-flow-core {
+    from { opacity: 0; transform: scale(.82); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes lg-flow-stage {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Reduced motion: a scoped kill on the governed root, never a page-global
+     star — the app-layer doctrine (#62). Fill states drop away and the
+     resting styles, which ARE the final composition, stand immediately. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-ledger-motion="flow"] *,
+    [data-ledger-motion="flow"] *::before,
+    [data-ledger-motion="flow"] *::after {
+      animation: none !important;
+    }
+  }
+  @media print {
+    [data-ledger-motion="flow"] :is(.lg-flow-core, .lg-flow-stage, .lg-flow-governed) {
+      animation: none !important;
+      opacity: 1 !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   OFFSCREEN PAUSE — unlayered, one declaration, the #54 pattern.
+
+   A loop nobody can see is out of contract. The published loop snippet
+   toggles data-motion-paused as loop hosts leave the viewport; this must win
+   against every layered animation shorthand (which resets play-state), so it
+   is unlayered and !important — exactly like the pointer-events guard.
+   ========================================================================== */
+[data-motion-paused], [data-motion-paused] * { animation-play-state: paused !important; }

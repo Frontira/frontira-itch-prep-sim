@@ -1,0 +1,20 @@
+-- 0000_init.sql — initial migration for this project's database.
+--
+-- Schema-as-migrations: this project's entire Postgres schema lives here as
+-- ordered, append-only SQL migrations. Never hand-edit a migration that has
+-- already been applied — add a new one instead. Keeping the schema reproducible
+-- is what turns a future move to a different Supabase organisation into a
+-- "create project + run migrations + copy data" job rather than
+-- reverse-engineering a live database.
+--
+-- Supabase CLI:
+--   supabase migration new <name>   # scaffold the next migration
+--   supabase db reset               # re-apply every migration from scratch
+--   supabase db push                # apply pending migrations to the linked project
+--
+-- Example — uncomment and adapt:
+-- create table public.notes (
+--   id uuid primary key default gen_random_uuid(),
+--   body text not null,
+--   created_at timestamptz not null default now()
+-- );

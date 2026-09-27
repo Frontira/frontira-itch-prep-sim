@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://frontira.com/schemas/pictogram-manifest.schema.json",
+  "title": "Frontira Pictogram Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "status",
+    "family",
+    "defaults",
+    "namespaces",
+    "icons"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "status": {
+      "enum": [
+        "selected",
+        "deprecated"
+      ]
+    },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "package",
+        "version",
+        "weight",
+        "license",
+        "source",
+        "viewBox"
+      ],
+      "properties": {
+        "provider": {
+          "const": "Phosphor"
+        },
+        "package": {
+          "const": "@phosphor-icons/core"
+        },
+        "version": {
+          "type": "string"
+        },
+        "weight": {
+          "const": "regular"
+        },
+        "license": {
+          "const": "MIT"
+        },
+        "source": {
+          "type": "string",
+          "format": "uri"
+        },
+        "viewBox": {
+          "const": "0 0 256 256"
+        }
+      }
+    },
+    "defaults": {
+      "type": "object"
+    },
+    "namespaces": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "icons": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*\\.[a-z][a-z0-9]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "providerIcon",
+          "reserved",
+          "usage"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "providerIcon": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "reserved": {
+            "type": "boolean"
+          },
+          "usage": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

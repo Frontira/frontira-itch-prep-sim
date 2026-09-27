@@ -1,0 +1,164 @@
+/* ==========================================================================
+   FRONTIRA APPLICATION CONTRACT · v1
+
+   Tailwind v4 + shadcn semantic adapter for the Ledger token system.
+
+   Consumer:
+     @import "tailwindcss";
+     @import "@frontira/design-system/app-tailwind4";
+
+   The consuming root MUST choose .lg-ink / .lg-paper (or data-register).
+   This file is intentionally an adapter, not another token source: every
+   colour, type, radius, and motion value resolves through Ledger variables.
+
+   Stable contract:
+   - Ledger owns visual semantics.
+   - shadcn owns component anatomy and interaction behaviour.
+   - Tailwind v4 connects the two through @theme inline.
+   ========================================================================== */
+
+@import "./fonts-ledger.css";
+@import "./tokens/generated/ledger-theme.css";
+
+/* These aliases MUST live on the register element. Declaring them on :root
+   would resolve their --lg-* references before a nested register supplies
+   those semantics, leaving the inherited alias invalid. */
+.lg-ink,
+.lg-paper,
+[data-register="ink"],
+[data-register="paper"] {
+  /* shadcn surfaces and text */
+  --background: var(--lg-bg);
+  --foreground: var(--lg-text);
+  --card: var(--lg-panel-bg);
+  --card-foreground: var(--lg-text);
+  --popover: var(--lg-panel-bg);
+  --popover-foreground: var(--lg-text);
+
+  /* Actions. The Ledger swap rule makes the act acid on ink and purple on
+     paper. Secondary/muted remain quiet raised surfaces. */
+  --primary: var(--lg-action-bg);
+  --primary-foreground: var(--lg-action-text);
+  --secondary: var(--lg-bg-raised);
+  --secondary-foreground: var(--lg-text);
+  --muted: var(--lg-bg-raised);
+  --muted-foreground: var(--lg-text-2);
+
+  /* shadcn "accent" is a hover/selected SURFACE, not Ledger's chromatic
+     --lg-accent. The 4% hover is the existing Ledger table-row rule. */
+  --accent: color-mix(in srgb, var(--lg-text) 4%, var(--lg-bg));
+  --accent-foreground: var(--lg-text);
+
+  /* Status colours are ratified Ledger semantics. The register background is
+     the contrast-proven foreground on the destructive fill in both registers. */
+  --destructive: var(--lg-err);
+  --destructive-foreground: var(--lg-bg);
+
+  /* Decorative hairlines and control chrome are deliberately separate.
+     Mapping both to --lg-ctrl-line would make every panel border too heavy. */
+  --border: var(--lg-line);
+  --input: var(--lg-ctrl-line);
+  --ring: var(--lg-focus);
+}
+
+:root {
+  /* shadcn's base-radius hook. Named Tailwind steps below use Ledger's explicit
+     scale rather than inventing multipliers in every consumer. */
+  --radius: var(--lg-r-8);
+
+  /* Sidebar is an ink island in either page register. This keeps navigation
+     stable when the surrounding application switches between ink and paper. */
+  --sidebar: var(--lg-ink-bg);
+  --sidebar-foreground: var(--lg-ink-text);
+  --sidebar-primary: var(--lg-purple);
+  --sidebar-primary-foreground: var(--lg-paper-bg);
+  --sidebar-accent: color-mix(in srgb, var(--lg-ink-text) 6%, var(--lg-ink-bg));
+  --sidebar-accent-foreground: var(--lg-ink-text);
+  --sidebar-border: var(--lg-hair-ink);
+  --sidebar-ring: var(--lg-cyan);
+}
+
+/* Chart series are register-specific because cyan/acid are valid on ink but
+   fail the graphical-object contrast floor on paper. Every selected paper
+   colour clears 3:1 on white; every ink colour clears 3:1 on Ledger ink. */
+.lg-ink,
+[data-register="ink"] {
+  --chart-1: var(--lg-purple);
+  --chart-2: var(--lg-lavender);
+  --chart-3: var(--lg-cyan);
+  --chart-4: var(--lg-acid);
+  --chart-5: var(--lg-coral);
+}
+
+.lg-paper,
+[data-register="paper"] {
+  --chart-1: var(--lg-purple-deep);
+  --chart-2: var(--lg-purple);
+  --chart-3: var(--lg-purple-lift);
+  --chart-4: var(--lg-lavender);
+  --chart-5: var(--lg-teal-deep);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Tailwind's own default --font-sans would otherwise win here, and the
+     shadcn/Next scaffold puts `font-sans` on the body. Without this line an
+     application inherits the system stack while believing it runs on Ledger.
+     --font-grot / --font-serif / --font-mono already arrive from the generated
+     theme; only Tailwind's built-in key needs claiming. */
+  --font-sans: var(--lg-grot);
+
+  --radius-sm: var(--lg-r-3);
+  --radius-md: var(--lg-r-6);
+  --radius-lg: var(--lg-r-8);
+  --radius-xl: var(--lg-r-10);
+  --radius-2xl: var(--lg-r-10);
+  --radius-3xl: var(--lg-r-10);
+  --radius-4xl: var(--lg-r-10);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--lg-grot);
+  }
+}

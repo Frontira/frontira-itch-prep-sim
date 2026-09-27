@@ -1,0 +1,168 @@
+{
+  "$schema": "./manifest.schema.json",
+  "version": "1.0.0",
+  "status": "selected",
+  "family": {
+    "provider": "Phosphor",
+    "package": "@phosphor-icons/core",
+    "version": "2.1.1",
+    "weight": "regular",
+    "license": "MIT",
+    "source": "https://github.com/phosphor-icons/phosphor-core",
+    "viewBox": "0 0 256 256"
+  },
+  "defaults": {
+    "size": 16,
+    "sizes": [12, 16, 20],
+    "minimumHitTarget": 44,
+    "color": "currentColor",
+    "accessibility": "The owning control supplies its accessible name. Decorative glyphs are aria-hidden; a standalone meaningful glyph requires a label.",
+    "reducedMotion": "Animated glyphs become static when reduced motion is requested."
+  },
+  "slots": {
+    "button.leading": "Leading action or state inside a text button.",
+    "button.trailing": "Trailing direction or destination inside a text button.",
+    "button.icon-only": "Icon-only button whose control owns an accessible name and minimum hit target.",
+    "navigation.leading": "Leading navigation action or destination.",
+    "navigation.trailing": "Trailing navigation direction or disclosure.",
+    "link.trailing": "Trailing external-destination indicator.",
+    "select.disclosure": "Select trigger disclosure indicator.",
+    "select.indicator": "Selected-item indicator.",
+    "checkbox.indicator": "Checked-state indicator.",
+    "dialog.close": "Dialog close action.",
+    "sheet.close": "Sheet or drawer close action.",
+    "status.leading": "Leading status or validation state.",
+    "alert.leading": "Leading alert state.",
+    "field.message": "Leading validation or field-message state.",
+    "table.action": "Row or table-level action.",
+    "loading.indicator": "Progressive loading indicator with a reduced-motion static state."
+  },
+  "glyphs": {
+    "control.add": {
+      "label": "Add",
+      "providerIcon": "plus",
+      "usage": "Create or add an item.",
+      "slots": ["button.leading", "button.icon-only", "table.action"],
+      "animated": false
+    },
+    "control.back": {
+      "label": "Back",
+      "providerIcon": "arrow-left",
+      "usage": "Return to the preceding view or hierarchy level.",
+      "slots": ["button.leading", "navigation.leading"],
+      "animated": false
+    },
+    "control.close": {
+      "label": "Close",
+      "providerIcon": "x",
+      "usage": "Dismiss a dialog, sheet or transient surface.",
+      "slots": ["button.icon-only", "dialog.close", "sheet.close"],
+      "animated": false
+    },
+    "control.confirm": {
+      "label": "Confirm",
+      "providerIcon": "check",
+      "usage": "Confirm a selection or completed control state.",
+      "slots": ["button.leading", "select.indicator", "checkbox.indicator", "status.leading"],
+      "animated": false
+    },
+    "control.copy": {
+      "label": "Copy",
+      "providerIcon": "copy",
+      "usage": "Copy content or a value.",
+      "slots": ["button.leading", "button.icon-only", "table.action"],
+      "animated": false
+    },
+    "control.disclosure": {
+      "label": "Disclose",
+      "providerIcon": "caret-down",
+      "usage": "Reveal a menu, list or additional content.",
+      "slots": ["navigation.trailing", "select.disclosure"],
+      "animated": false
+    },
+    "control.edit": {
+      "label": "Edit",
+      "providerIcon": "pencil-simple",
+      "usage": "Modify an existing item or value.",
+      "slots": ["button.leading", "button.icon-only", "table.action"],
+      "animated": false
+    },
+    "control.external": {
+      "label": "Open externally",
+      "providerIcon": "arrow-square-out",
+      "usage": "Open a destination outside the current application context.",
+      "slots": ["button.trailing", "link.trailing", "table.action"],
+      "animated": false
+    },
+    "control.filter": {
+      "label": "Filter",
+      "providerIcon": "funnel",
+      "usage": "Filter a collection or data view.",
+      "slots": ["button.leading", "button.icon-only", "table.action"],
+      "animated": false
+    },
+    "control.loading": {
+      "label": "Loading",
+      "providerIcon": "spinner-gap",
+      "usage": "Indicate progressive work without implying completion.",
+      "slots": ["button.leading", "status.leading", "loading.indicator"],
+      "animated": true
+    },
+    "control.more": {
+      "label": "More actions",
+      "providerIcon": "dots-three",
+      "usage": "Open an overflow menu of additional actions.",
+      "slots": ["button.icon-only", "table.action"],
+      "animated": false
+    },
+    "control.refresh": {
+      "label": "Refresh",
+      "providerIcon": "arrow-clockwise",
+      "usage": "Refresh or synchronize the current data.",
+      "slots": ["button.leading", "button.icon-only", "table.action"],
+      "animated": false
+    },
+    "control.remove": {
+      "label": "Remove",
+      "providerIcon": "minus",
+      "usage": "Remove an item from a collection without implying permanent deletion.",
+      "slots": ["button.leading", "button.icon-only", "table.action"],
+      "animated": false
+    },
+    "control.run": {
+      "label": "Run",
+      "providerIcon": "play",
+      "usage": "Start or submit a governed operation.",
+      "slots": ["button.leading", "button.icon-only"],
+      "animated": false
+    },
+    "state.error": {
+      "label": "Error",
+      "providerIcon": "x-circle",
+      "usage": "An error, blocked state or failed validation.",
+      "slots": ["status.leading", "alert.leading", "field.message"],
+      "animated": false
+    },
+    "state.info": {
+      "label": "Information",
+      "providerIcon": "info",
+      "usage": "Neutral information that requires attention but not intervention.",
+      "slots": ["status.leading", "alert.leading", "field.message"],
+      "animated": false
+    },
+    "state.success": {
+      "label": "Success",
+      "providerIcon": "check-circle",
+      "usage": "A successful, current or completed state.",
+      "slots": ["status.leading", "alert.leading", "field.message"],
+      "animated": false
+    },
+    "state.warning": {
+      "label": "Warning",
+      "providerIcon": "warning",
+      "usage": "A caution, review or escalating risk state.",
+      "slots": ["status.leading", "alert.leading", "field.message"],
+      "animated": false
+    }
+  }
+}

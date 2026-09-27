@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://frontira.com/schemas/app-components.schema.json",
+  "title": "Frontira application component contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "distribution",
+    "visualOwner",
+    "behaviorOwner",
+    "rootRequirement",
+    "glyphContract",
+    "components"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "contractVersion": { "type": "integer", "minimum": 1 },
+    "distribution": { "const": "hybrid" },
+    "visualOwner": { "type": "string", "minLength": 1 },
+    "behaviorOwner": { "type": "string", "minLength": 1 },
+    "rootRequirement": { "type": "string", "minLength": 1 },
+    "glyphContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "domainSource", "controlSource", "providerImports", "sizes", "iconOnlyMinimumHitTarget"],
+      "properties": {
+        "family": { "const": "Phosphor Regular 2.1.1" },
+        "domainSource": { "const": "@frontira/design-system/pictograms" },
+        "controlSource": { "const": "@frontira/design-system/control-glyphs" },
+        "providerImports": { "const": "forbidden outside the governed adapter" },
+        "sizes": { "const": [12, 16, 20] },
+        "iconOnlyMinimumHitTarget": { "type": "integer", "minimum": 44 }
+      }
+    },
+    "components": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "root", "states"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "root": { "type": "string", "pattern": "^\\[data-ledger-ui=" },
+          "variants": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "sizes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "slots": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "states": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

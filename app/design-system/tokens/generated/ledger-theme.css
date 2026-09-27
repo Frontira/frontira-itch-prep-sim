@@ -1,0 +1,122 @@
+/* ========================================================================
+   GENERATED — DO NOT EDIT, run node scripts/build-tokens.mjs
+
+   Source:  tokens/ledger.tokens.json
+            scripts/derive-status.mjs  (status colours — derived, never typed)
+   Emitter: scripts/build-tokens.mjs
+
+   TAILWIND v4 THEME — for frontira-portal, which uses `@theme inline` in CSS.
+
+   Usage:  @import "@frontira/design-system/tokens/generated/ledger-theme.css";
+
+      The v3 consumer (frontira-crm) wants tailwind-ledger.cjs instead — that
+      file carries the same tokens as a preset object.
+
+      `inline` is deliberate: the semantic entries below point at the live
+      --lg-* variables, so a utility written once keeps flipping with the
+      register when a subtree carries .lg-ink or .lg-paper. The raw palette is
+      emitted as literals because it does not move.
+
+      STATUS COLOURS were RATIFIED 2026-07-23. The err / warn / ok entries point
+      at --lg-* variables derived by scripts/derive-status.mjs; re-run the
+      generator rather than hand-copying any of them.
+
+   Edits here are overwritten on the next build. Change the source instead.
+   ======================================================================== */
+
+
+@import "./ledger-tokens.css";
+
+@theme inline {
+  /* raw palette — literals, register-independent */
+  --color-ledger-purple: #6F43D5;
+  --color-ledger-purple-deep: #39206F;
+  --color-ledger-lavender: #A080ED;
+  --color-ledger-purple-lift: #8862E1;
+  --color-ledger-cyan: #8BDDD3;
+  --color-ledger-teal-deep: #268277;
+  --color-ledger-acid: #EAFF95;
+  --color-ledger-coral: #F0796A;
+
+  /* ink neutrals */
+  --color-ink-bg: #0A0A0F;
+  --color-ink-raised: #14121F;
+  --color-ink-text: #F2F2F2;
+  --color-ink-muted: #8A8F98;
+  --color-ink-hair: rgba(242, 242, 242, .14);
+  /* paper neutrals */
+  --color-paper-bg: #FFFFFF;
+  --color-paper-text: #292929;
+  --color-paper-muted: #66676C;
+  --color-paper-surface: #F0F1F2;
+  --color-paper-border: #C9CBD0;
+  --color-paper-hair: #E1E2E6;
+
+  /* semantic — register-reactive by construction: these follow the live
+     --lg-* variables, so .lg-ink / .lg-paper still flips a utility. */
+  --color-bg: var(--lg-bg);
+  --color-bg-raised: var(--lg-bg-raised);
+  --color-text: var(--lg-text);
+  --color-text-2: var(--lg-text-2);
+  --color-accent: var(--lg-accent);
+  --color-signal: var(--lg-signal);
+  --color-action-bg: var(--lg-action-bg);
+  --color-action-text: var(--lg-action-text);
+  --color-line: var(--lg-line);
+  --color-display-ink: var(--lg-display-ink);
+  --color-ghost-line: var(--lg-ghost-line);
+  --color-panel-bg: var(--lg-panel-bg);
+  --color-stamp-bg: var(--lg-stamp-bg);
+  --color-action-glow: var(--lg-action-glow);
+  --color-focus: var(--lg-focus);
+  --color-err: var(--lg-err);
+  --color-warn: var(--lg-warn);
+  --color-ok: var(--lg-ok);
+  --color-info: var(--lg-info);
+  --color-err-wash: var(--lg-err-wash);
+  --color-ok-wash: var(--lg-ok-wash);
+  --color-info-wash: var(--lg-info-wash);
+  --color-warn-wash: var(--lg-warn-wash);
+  --color-ctrl-line: var(--lg-ctrl-line);
+
+  /* band — register-INDEPENDENT by design */
+  --color-band-bg: var(--lg-band-bg);
+  --color-band-text: var(--lg-band-text);
+  --color-band-text-2: var(--lg-band-text-2);
+  --color-band-line: var(--lg-band-line);
+
+  /* type · motion · radius · tracking */
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-grot: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --duration-100: 100ms;
+  --duration-300: 300ms;
+  --duration-600: 600ms;
+  --duration-900: 900ms;
+  --duration-step: 180ms;
+  --duration-stagger: 80ms;
+  --duration-flow-step: 240ms;
+  --duration-breathe: 8000ms;
+  --ease-ledger: cubic-bezier(0.16, 1, 0.3, 1);
+  --radius-2: 2px;
+  --radius-3: 3px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --radius-10: 10px;
+  --radius-pill: 999px;
+  --tracking-kicker: .22em;
+  --tracking-label: .2em;
+  --tracking-meta: .14em;
+  --tracking-annot: .06em;
+  --tracking-tight: -.01em;
+
+  /* control geometry (#17) — the shared row: h-ctrl / h-ctrl-sm / leading-ctrl */
+  --spacing-ctrl: var(--lg-ctrl-h);
+  --spacing-ctrl-sm: var(--lg-ctrl-h-sm);
+  --leading-ctrl: var(--lg-ctrl-lh);
+
+  /* the one gradient family — utilities: bg-(image:--gradient-ledger-ink) */
+  --gradient-ledger-ink: linear-gradient(94deg, #6F43D5 0%, #A080ED 46%, #8BDDD3 100%);
+  --gradient-ledger-paper: linear-gradient(94deg, #39206F 0%, #6F43D5 100%);
+  --gradient-ledger-paper-full: linear-gradient(94deg, #39206F 0%, #6F43D5 46%, #268277 100%);
+}

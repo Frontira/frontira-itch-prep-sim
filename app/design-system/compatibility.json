@@ -1,0 +1,153 @@
+{
+  "$schema": "./schemas/compatibility.schema.json",
+  "schemaVersion": 1,
+  "packageVersion": "4.8.0",
+  "channel": {
+    "type": "github-packages",
+    "registry": "https://npm.pkg.github.com",
+    "scope": "@frontira"
+  },
+  "contracts": {
+    "tokens": 1,
+    "application": 1,
+    "components": 1,
+    "atmosphere": 1,
+    "motion": 1,
+    "workflow": 1,
+    "specGrid": 1,
+    "brandLockup": 1,
+    "openGraph": 1,
+    "miroProfile": 1
+  },
+  "runtime": {
+    "node": ">=20.9.0",
+    "tailwindcss": ">=4.0.0 <5.0.0",
+    "nextFixture": "16.2.12",
+    "reactFixture": "19.2.8"
+  },
+  "registers": [
+    "ink",
+    "paper"
+  ],
+  "stableExports": [
+    "./ledger-tokens",
+    "./ledger-tokens.json",
+    "./ledger-theme",
+    "./app-tailwind4",
+    "./app-components",
+    "./app-components.json",
+    "./pictograms",
+    "./pictograms.css",
+    "./pictograms/manifest",
+    "./control-glyphs",
+    "./control-glyphs.css",
+    "./control-glyphs/manifest",
+    "./iconography-policy",
+    "./compatibility.json",
+    "./app-atmosphere",
+    "./atmosphere",
+    "./atmosphere.json",
+    "./app-motion",
+    "./motion-grammar",
+    "./motion-grammar.json",
+    "./app-cards",
+    "./workflow-contract",
+    "./workflow-contract.json",
+    "./spec-grid",
+    "./spec-grid.css",
+    "./spec-grid.json",
+    "./brand-lockup",
+    "./brand-lockup.css",
+    "./brand-lockup.json",
+    "./brand/mark.svg",
+    "./brand/wordmark.svg",
+    "./open-graph",
+    "./open-graph-contract",
+    "./miro-profile",
+    "./miro-profile.json"
+  ],
+  "experimentalPaths": [
+    "research/",
+    "slides/",
+    "content/"
+  ],
+  "deprecation": {
+    "minimumMinorReleases": 2,
+    "minimumDays": 90,
+    "majorApprovalRequired": true
+  },
+  "deprecations": [
+    {
+      "id": "index.js animation vocabulary (timing tiers, stagger, ambient cadences, hero choreography)",
+      "announcedIn": "4.4.0",
+      "removeNoEarlierThan": "5.0.0",
+      "replacement": "./ledger-tokens motion group + ./motion-grammar (contracts.motion v1)"
+    }
+  ],
+  "migrations": [
+    {
+      "from": "4.0.0",
+      "to": "4.1.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#410",
+      "summary": "The v1 application component contract is additive; existing adapter-only consumers remain valid."
+    },
+    {
+      "from": "4.1.0",
+      "to": "4.2.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#420",
+      "summary": "Semantic pictograms, UI control glyphs and component icon slots are additive; migrate direct provider imports through the governed adapter when adopting the release."
+    },
+    {
+      "from": "4.2.0",
+      "to": "4.3.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#430",
+      "summary": "The application atmosphere grammar is additive; pages without data-ledger-section are untouched, and consumer-local background recipes migrate to manifest carriers at leisure."
+    },
+    {
+      "from": "4.3.0",
+      "to": "4.4.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#440",
+      "summary": "The motion grammar is additive; existing pages keep their shipped motion, beacons breathe only where a composition opts in, and the flow recipe requires no animation library."
+    },
+    {
+      "from": "4.4.0",
+      "to": "4.5.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#450",
+      "summary": "Card roles and workflow step states are additive; existing cards keep their anatomy, and deriveStates replaces hand-written boolean gating."
+    },
+    {
+      "from": "4.5.0",
+      "to": "4.6.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#460",
+      "summary": "The spec grid is a new, additive component; nothing existing changes. Consumers that hand-rolled a hairline matrix should move to specGridFor, because the short last row and the container-driven collapse are what the emitter exists to handle."
+    },
+    {
+      "from": "4.6.0",
+      "to": "4.7.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#470",
+      "summary": "The brand identity contract is additive. Surfaces rendering the wordmark through <img> plus a brightness(0) invert(1) filter should move to the inline asset, which inherits currentColor and therefore follows the register."
+    },
+    {
+      "from": "4.7.0",
+      "to": "4.8.0",
+      "kind": "minor",
+      "required": false,
+      "guide": "MIGRATIONS.md#480",
+      "summary": "The Miro collaboration profile is additive and affects no existing surface. Workshop boards built as a flattened canvas image should be rebuilt from native objects."
+    }
+  ]
+}

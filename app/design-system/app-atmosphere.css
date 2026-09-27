@@ -1,0 +1,257 @@
+/* ==========================================================================
+   FRONTIRA APPLICATION ATMOSPHERE · v1  (#62)
+
+   Section-level backgrounds for live applications: the carriers behind a
+   hero, a proof strip, a paper argument, a process band, a synthesis or a
+   close. Consumers never copy a gradient, an SVG path or a palette value —
+   a section carries two attributes and, for most carriers, one child layer
+   emitted by @frontira/design-system/atmosphere:
+
+     <section class="lg-ink" data-ledger-section="hero"
+              data-ledger-atmosphere="aurora" data-tier="section">
+       <div class="lg-atm-aurora" data-ledger-atmosphere-layer aria-hidden="true">…</div>
+       <div class="lg-atm-content">…</div>
+     </section>
+
+   Which carrier is legal on which section, the intensity budgets and the
+   text-safe zones are DATA — assets/atmosphere/atmosphere.json — validated by
+   atmosphere.mjs. This file only paints.
+
+   Every colour resolves through register variables, so each carrier works on
+   ink and paper from one rule. A carrier outside a register scope paints
+   nothing, and the check treats it as the error it is.
+
+   Content sits over a carrier by opt-in (.lg-atm-content), not by a blanket
+   promotion of every child: promoting siblings is how #69's first cut moved
+   the deck chrome, and the rendered paint-order probe catches a page that
+   forgets the wrapper.
+   ========================================================================== */
+
+@layer components {
+  [data-ledger-section] {
+    position: relative;
+  }
+
+  [data-ledger-atmosphere-layer] {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .lg-atm-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Quiet is geometry, not a dial: the carrier keeps its ratified recipe and
+     is clipped to the right 45% of the section. Rescaling a ratified alpha
+     would ship an unratified variant of approved artwork; clipping does not. */
+  [data-tier="quiet"] > [data-ledger-atmosphere-layer] {
+    inset: 0 0 0 55%;
+  }
+
+  /* ── aurora ─────────────────────────────────────────────────────────────
+     The token composition verbatim: band boxes, gradients, blur and mask all
+     come from --lg-aurora-*, which the register resolves (ink runs three
+     bands, paper runs four behind a centre-clear mask). Keyframes are
+     prefixed so co-loading styles-ledger.css never collides. */
+  .lg-atm-aurora {
+    mask-image: var(--lg-aurora-mask);
+    -webkit-mask-image: var(--lg-aurora-mask);
+  }
+  .lg-atm-aurora .lg-atm-aurora-band {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(var(--lg-aurora-blur));
+  }
+  .lg-atm-aurora .lg-atm-aurora-band:nth-child(1) {
+    inset: var(--lg-aurora-b1-box);
+    background: var(--lg-aurora-b1);
+    animation: lg-atm-drift1 14s ease-in-out infinite alternate;
+  }
+  .lg-atm-aurora .lg-atm-aurora-band:nth-child(2) {
+    inset: var(--lg-aurora-b2-box);
+    background: var(--lg-aurora-b2);
+    animation: lg-atm-drift2 18s ease-in-out infinite alternate;
+  }
+  .lg-atm-aurora .lg-atm-aurora-band:nth-child(3) {
+    inset: var(--lg-aurora-b3-box);
+    background: var(--lg-aurora-b3);
+    animation: lg-atm-drift3 22s ease-in-out infinite alternate;
+  }
+  .lg-atm-aurora .lg-atm-aurora-band:nth-child(4) {
+    inset: var(--lg-aurora-b4-box, 0);
+    background: var(--lg-aurora-b4, none);
+    animation: lg-atm-drift2 20s ease-in-out infinite alternate;
+  }
+
+  /* The v4 drift recipe verbatim: ±8% translate, ±3° rotate, ≤1.08 scale.
+     Compositor-safe (transform only), slow, and killed under reduced motion
+     with the bands standing at their un-transformed boxes — the frozen state
+     is a complete composition, not a snapshot mid-drift. */
+  @keyframes lg-atm-drift1 {
+    from { transform: translate(0, 0) rotate(0deg) scale(1); }
+    to { transform: translate(8%, 6%) rotate(3deg) scale(1.08); }
+  }
+  @keyframes lg-atm-drift2 {
+    from { transform: translate(0, 0) rotate(0deg) scale(1.05); }
+    to { transform: translate(-6%, -8%) rotate(-3deg) scale(1); }
+  }
+  @keyframes lg-atm-drift3 {
+    from { transform: translate(0, 0) rotate(0deg) scale(1); }
+    to { transform: translate(-8%, 5%) rotate(2deg) scale(1.06); }
+  }
+
+  /* ── survey ─────────────────────────────────────────────────────────────
+     Host for the COMMITTED terrain (assets/atmosphere/survey-041.svg — the
+     SVG wears .lg-survey-line/.lg-survey-index and this file inks them from
+     the register). Static by law. data-clear masks one band to nothing so
+     copy has stated ground; the zone geometry lives in the manifest and the
+     check measures copy against it. Mask colours are alpha-only, so the
+     keywords black/transparent are the whole palette. */
+  .lg-atm-survey svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .lg-atm-survey .lg-survey-line {
+    stroke: var(--lg-text);
+    stroke-width: 1;
+    fill: none;
+    opacity: .22;
+  }
+  .lg-atm-survey .lg-survey-index {
+    stroke: var(--lg-text);
+    stroke-width: 1.6;
+    fill: none;
+    opacity: .6;
+  }
+  .lg-atm-survey[data-clear="bottom"] {
+    mask-image: linear-gradient(to top, black 42%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to top, black 42%, transparent 80%);
+  }
+  .lg-atm-survey[data-clear="top"] {
+    mask-image: linear-gradient(to bottom, black 42%, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, black 42%, transparent 80%);
+  }
+  .lg-atm-survey[data-clear="left"] {
+    mask-image: linear-gradient(to left, black 45%, transparent 82%);
+    -webkit-mask-image: linear-gradient(to left, black 45%, transparent 82%);
+  }
+
+  /* ── grid ───────────────────────────────────────────────────────────────
+     The technical grid, at its provenance numbers exactly: 1px lines of the
+     register text colour at 3%, 48px cell (research website hero-grid). The
+     ink is a color-mix over --lg-text so the register re-inks it and no raw
+     rgba enters this file. */
+  .lg-atm-grid {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--lg-text) 3%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--lg-text) 3%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* ── beacons ────────────────────────────────────────────────────────────
+     Token glows standing on the committed terrain's own peaks — positions
+     are inline percentages from survey-041.json's peak table, emitted by
+     atmosphere.mjs. Static by default; a composition opts into breathe
+     through the #56 motion grammar (data-breathe on the layer), each light
+     cycling on its own whole-second duration and negative phase from the
+     peak table. Transform only, and the from-frame equals the static state,
+     so reduced motion and frozen capture show the identical composition. */
+  .lg-atm-beacons .lg-atm-beacon {
+    position: absolute;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .lg-atm-beacons .lg-atm-beacon[data-tone="accent"] {
+    background: radial-gradient(circle,
+      color-mix(in srgb, var(--lg-accent) 34%, transparent) 0%,
+      color-mix(in srgb, var(--lg-accent) 10%, transparent) 45%,
+      transparent 70%);
+  }
+  .lg-atm-beacons .lg-atm-beacon[data-tone="signal"] {
+    background: radial-gradient(circle,
+      color-mix(in srgb, var(--lg-signal) 26%, transparent) 0%,
+      color-mix(in srgb, var(--lg-signal) 8%, transparent) 45%,
+      transparent 70%);
+  }
+
+  .lg-atm-beacons[data-breathe] .lg-atm-beacon {
+    animation: lg-atm-breathe var(--lg-breathe-d, var(--lg-t-breathe)) ease-in-out
+      var(--lg-breathe-delay, 0s) infinite alternate;
+  }
+  @keyframes lg-atm-breathe {
+    from { transform: translate(-50%, -50%) scale(1); }
+    to { transform: translate(-50%, -50%) scale(1.06); }
+  }
+
+  /* ── band ───────────────────────────────────────────────────────────────
+     A surface, not an overlay: the section itself becomes the deep slab and
+     its text semantics flip with it. --lg-band-* is register-INDEPENDENT by
+     design, so this is the one carrier that reads identically on ink and
+     paper. The custom-property swap is scoped to the element — never a
+     descendant-selector override, which fails under nested register islands. */
+  [data-ledger-atmosphere="band"] {
+    background: var(--lg-band-bg);
+    color: var(--lg-band-text);
+    --lg-text: var(--lg-band-text);
+    --lg-text-2: var(--lg-band-text-2);
+    --lg-line: var(--lg-band-line);
+    /* The shadcn aliases COMPUTED on the register ancestor and inherit as
+       resolved colours, so re-declaring the --lg-* tokens above does not
+       reach anything written against var(--foreground) or
+       var(--muted-foreground). The measured symptom was a 2.31:1 kicker on
+       the paper band. The aliases are therefore re-anchored here, scoped to
+       the element — the same nested-island rule the register contract keeps. */
+    --background: var(--lg-band-bg);
+    --foreground: var(--lg-band-text);
+    --muted-foreground: var(--lg-band-text-2);
+    --border: var(--lg-band-line);
+  }
+
+  /* An opaque stage for controls or dense evidence inside a textured
+     section: the check refuses a form control over texture unless it sits
+     on one of these. */
+  .lg-atm-copy-panel {
+    position: relative;
+    z-index: 1;
+    background: var(--lg-panel-bg);
+    border: 1px solid var(--lg-line);
+    border-radius: var(--lg-r-8);
+  }
+
+  /* Reduced motion: a scoped kill, not a global star. The aurora freezes at
+     its un-transformed band boxes; every other carrier never moved. */
+  @media (prefers-reduced-motion: reduce) {
+    .lg-atm-aurora .lg-atm-aurora-band,
+    .lg-atm-beacons .lg-atm-beacon,
+    .lg-atm-beacons[data-breathe] .lg-atm-beacon {
+      animation: none;
+    }
+  }
+
+  /* Print: alpha-blur and glow carriers are removed (a mask that fails open
+     drops full-strength bands under text); hairline carriers and the opaque
+     band print as themselves. */
+  @media print {
+    .lg-atm-aurora,
+    .lg-atm-beacons {
+      display: none;
+    }
+  }
+}
+
+/* ==========================================================================
+   UNLAYERED GUARD — one declaration, the #54 pattern.
+
+   An atmosphere that intercepts a click is not a background, it is a defect,
+   and pointer-events is the single declaration whose loss is silent until a
+   user cannot press a button. An unlayered consumer reset (`div {}`-grade
+   selectors, Tailwind preflight) beats every layered rule above; this line
+   beats the reset by specificity (0,1,0 over 0,0,1) with no !important.
+   Everything else stays layered where a consumer can restyle it cheaply.
+   ========================================================================== */
+[data-ledger-atmosphere-layer] { pointer-events: none; }

@@ -1,0 +1,147 @@
+/* ==========================================================================
+   FRONTIRA LEDGER SPEC GRID · v1  (#46)
+
+   A hairline matrix for finite sets of comparable principles, capabilities,
+   requirements or system layers. Promoted out of the Icon Family Lab, where
+   it was local CSS.
+
+   TOKEN-ONLY AND UNLAYERED, deliberately. The Icon Family Lab links exactly
+   two stylesheets — fonts and tokens — and slides and print load less than
+   that. So this file depends on --lg-* alone, never on the shadcn aliases,
+   and it sits outside @layer components: a layered rule loses to ANY
+   unlayered one (#54), and this pattern has to survive in documents that
+   never load the component layer at all.
+
+   THE HAIRLINE, measured rather than argued. Two techniques were rendered in
+   headless Chrome at 2 and 3 columns across 4–8 items:
+
+     gap-as-hairline    1px doubled line at the container's bottom edge, and
+                        the empty slot of a short last row paints as a SOLID
+                        line-coloured block hundreds of pixels wide
+     explicit borders   0px doubling on both edges
+
+   So: the container draws top and left, every cell draws right and bottom.
+   Every cell carries the same two borders at every breakpoint, which is why
+   the responsive collapse needs no nth-child arithmetic — the rule the lab
+   version used, and the reason its hairlines doubled whenever the column
+   count changed and its :nth-child(3n) exception was not rewritten to match.
+
+   THE SHORT LAST ROW cannot be solved in CSS, because CSS cannot count the
+   items to know the remainder. spec-grid.mjs appends hidden filler cells;
+   check-spec-grid.mjs proves the frame closes to 0px at every count.
+
+   Collapsing changes the remainder, so a filler is marked with the column
+   counts it is needed at — data-spec-filler="2 3" — and each breakpoint
+   shows only its own. The breakpoint ranges below are mutually exclusive so
+   that this stays a matter of which rule applies, not which rule wins.
+   ========================================================================== */
+
+.lg-spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--lg-line);
+  border-left: 1px solid var(--lg-line);
+}
+
+.lg-spec-grid[data-columns="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ── the cell ─────────────────────────────────────────────────────────────
+   Hairlines instead of filled cards: no surface, no shadow, no radius.
+   min-height keeps a one-line body from collapsing its row out of step with
+   the others, which is what lets the set read as comparable. */
+.lg-spec-cell {
+  min-height: 180px;
+  padding: 22px 20px;
+  border-right: 1px solid var(--lg-line);
+  border-bottom: 1px solid var(--lg-line);
+}
+
+/* ── the leading marker ───────────────────────────────────────────────────
+   A label, not a badge. No disc, no ring, no fill: a circular numbered badge
+   reads as an icon container, which is what the card contract (#67) refused
+   for exactly this reason. */
+.lg-spec-index {
+  display: block;
+  margin-bottom: 32px;
+  font: 400 9px/1 var(--lg-mono);
+  letter-spacing: var(--lg-track-label);
+  text-transform: uppercase;
+  color: var(--lg-text-2);
+}
+
+/* The optional pictogram takes the leading slot INSTEAD of the index. */
+.lg-spec-pictogram {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 24px;
+  color: var(--lg-text-2);
+}
+.lg-spec-pictogram svg { display: block; width: 100%; height: 100%; }
+
+.lg-spec-title {
+  display: block;
+  margin-bottom: 9px;
+  font: 600 14px/1.3 var(--lg-grot);
+  color: var(--lg-text);
+}
+
+.lg-spec-body {
+  margin: 0;
+  font: 400 11px/1.5 var(--lg-grot);
+  color: var(--lg-text-2);
+}
+
+/* ── the fillers ──────────────────────────────────────────────────────────
+   Hidden by default and shown only where the remainder demands it. A filler
+   holds no copy and is aria-hidden in the markup, so it closes the frame
+   without joining the set. */
+.lg-spec-cell[data-spec-filler] { display: none; min-height: 0; }
+
+/* ── responsive collapse ──────────────────────────────────────────────────
+   CONTAINER queries, not viewport queries. #46 says two or three columns
+   "depending on content and container width", and the difference is not
+   pedantry: a slide is authored at a 1920px stage and then SCALED to fit,
+   so its width never changes no matter how narrow the browser gets. Under
+   viewport queries a deck opened on a phone reflows its grid to one column
+   inside a stage that is still 1920px wide — the layout breaks precisely
+   where nothing moved. Under container queries the stage keeps its three
+   columns and an editorial column collapses on its own width, which is what
+   both surfaces actually want.
+
+   The wrapper exists to be the query container: an element cannot answer a
+   container query about itself. The emitter always emits it.
+
+   Only grid-template-columns and the filler selection change. The hairlines
+   themselves never do. */
+.lg-spec { container-type: inline-size; }
+
+/* Wide: the authored column count applies. */
+@container (min-width: 1121px) {
+  .lg-spec-grid[data-columns="2"] .lg-spec-cell[data-spec-filler~="2"],
+  .lg-spec-grid[data-columns="3"] .lg-spec-cell[data-spec-filler~="3"] { display: block; }
+}
+
+/* Medium: two columns whatever was authored, so the 2-column fillers apply. */
+@container (min-width: 721px) and (max-width: 1120px) {
+  .lg-spec-grid[data-columns="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lg-spec-grid .lg-spec-cell[data-spec-filler~="2"] { display: block; }
+}
+
+/* Narrow: one column. A single column has no remainder, so no filler runs
+   and the container's own borders close the frame. */
+@container (max-width: 720px) {
+  .lg-spec-grid,
+  .lg-spec-grid[data-columns="3"] { grid-template-columns: minmax(0, 1fr); }
+  .lg-spec-cell { min-height: 0; }
+}
+
+/* ── print ────────────────────────────────────────────────────────────────
+   Hairlines survive print only if they are asked to. */
+@media print {
+  .lg-spec-grid { break-inside: avoid; }
+  .lg-spec-cell { break-inside: avoid; min-height: 0; }
+}

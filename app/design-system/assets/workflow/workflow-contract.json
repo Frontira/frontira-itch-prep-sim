@@ -1,0 +1,78 @@
+{
+  "$comment": "Card anatomy and workflow step-state contract (#67, #68). One file because #68's step card IS a #67 sequence card: the state a step is in decides what its trailing slot may hold, and splitting the two would let the marker law and the state law disagree. Evidence: Frontira/frontira-agentic-ai PR #12, where the Agent Workflow Builder hand-rolled both.",
+  "version": "1.0.0",
+  "cards": {
+    "$comment": "A card header has exactly two marker positions and they carry different jobs. Numbers say WHERE in a sequence; pictograms say WHAT KIND of thing; state glyphs say HOW IT IS GOING. The observed failure was all three competing for the same corner across peer cards.",
+    "roles": {
+      "sequence": {
+        "note": "An ordered task or step. Its position is the marker.",
+        "leading": "index",
+        "trailing": ["state", "none"],
+        "pictogramAllowed": false,
+        "pictogramNote": "A card that is part of an ordered sequence takes its identity from its number. A pictogram beside the index is a second answer to a question already answered — the observed defect was circular step badges that read as icon containers."
+      },
+      "summary": {
+        "note": "A metric or state-of-play card.",
+        "leading": "pictogram",
+        "trailing": ["metric", "status", "control", "none"],
+        "pictogramAllowed": true,
+        "pictogramRequired": true
+      },
+      "receipt": {
+        "note": "Evidence: what happened, and what proves it. Same header anatomy as summary — peers must not drift apart.",
+        "leading": "pictogram",
+        "trailing": ["metric", "status", "control", "none"],
+        "pictogramAllowed": true,
+        "pictogramRequired": true,
+        "semantics": ["governance.proof", "governance.audit", "governance.receipt"],
+        "semanticsNote": "A receipt names proof, audit or receipt. A database glyph on an operating receipt describes the storage, not the evidence — the observed substitution this rule prevents."
+      }
+    },
+    "markerLimit": 1,
+    "markerLimitNote": "At most one PRIMARY marker per card header. A sequence number, a semantic pictogram and a state glyph are not three decorations of equal weight; the leading slot holds exactly one of them and the trailing slot holds state or value, never a second identity.",
+    "atmosphere": {
+      "canvasOwnsPattern": true,
+      "cardMotif": "opt-in, one shared low-contrast motif across peers or none at all",
+      "note": "Aurora and strong patterns belong to the canvas or section (#62). A motif on one card and not its peer is the observed defect; peers share the motif or nobody has it.",
+      "registerParity": "light and dark variants keep identical spacing and slots"
+    }
+  },
+  "steps": {
+    "$comment": "The state model. `ready` is a first-class state, not a derived boolean: the consumer computed it as `available` inside a nested ternary per step, which is how four steps ended up with four different gating rules.",
+    "states": ["locked", "ready", "active", "complete"],
+    "stateNotes": {
+      "locked": "visible and readable, with a stated reason and what unlocks it; controls and navigation disabled",
+      "ready": "prerequisites met, available, not the current focus",
+      "active": "the current focus (aria-current=step)",
+      "complete": "explicitly confirmed; editing an upstream dependency reopens it"
+    },
+    "status": ["invalid", "validated", "none"],
+    "statusNote": "Validation status coexists with state in the TRAILING slot. It is a status, not a fifth state: a step can be complete and invalid at once, and collapsing them would make that unsayable.",
+    "lockedRequiresReason": true,
+    "lockedRequiresReasonNote": "A locked step states why it is locked and what unlocks it. Opacity is supporting feedback and never the only signal.",
+    "opacityIsNotTheOnlySignal": true
+  },
+  "graph": {
+    "$comment": "Prerequisites are a directed acyclic graph, not an assumption that every flow is a line. The consumer example: step 1 unlocks 2 and 3; 2 and 3 together unlock 4.",
+    "acyclic": true,
+    "parallelBranchesSupported": true,
+    "gateOnlyRealDependencies": true,
+    "revocation": "transitive",
+    "revocationNote": "Editing a confirmed upstream step revokes every downstream confirmation that depended on it, transitively. Without this a step re-locks while STAYING confirmed, so re-confirming the parent instantly shows the child complete again and nobody re-reviewed it. That is the live defect in the consumer's boolean gating."
+  },
+  "motion": {
+    "transitionMsMin": 160,
+    "transitionMsMax": 200,
+    "passiveCardTranslates": false,
+    "passiveCardNote": "A card that is not a control does not move on hover. Ready cards may answer with border or shadow.",
+    "actionableLiftPxMax": 2,
+    "reducedMotion": "custom transforms and animated scrolling are removed; every state remains distinguishable without them"
+  },
+  "accessibility": {
+    "stepControlElement": "button",
+    "lockedDisabled": true,
+    "activeAriaCurrent": "step",
+    "lockedContrastFloor": 4.5,
+    "lockedContrastNote": "A locked step is dimmed but still read. 4.5:1 is the floor its copy holds — 'visible and readable' is a measurable claim."
+  }
+}

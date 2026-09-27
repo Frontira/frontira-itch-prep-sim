@@ -1,0 +1,296 @@
+/* ========================================================================
+   GENERATED — DO NOT EDIT, run node scripts/build-tokens.mjs
+
+   Source:  tokens/ledger.tokens.json
+            scripts/derive-status.mjs  (status colours — derived, never typed)
+   Emitter: scripts/build-tokens.mjs
+
+   The TOKEN LAYER of Ledger: the :root block plus the .lg-ink / .lg-paper
+   register blocks. styles-ledger.css @imports this file and then adds the
+   hand-authored COMPONENT layer (§3–§10) on top — components are written by
+   hand on purpose; only tokens are generated.
+
+   Status colours were ratified 2026-07-23 and carry the ratio they were
+   earned at, measured on the quantized hex.
+
+   Edits here are overwritten on the next build. Change the source instead.
+   ======================================================================== */
+
+
+/* ------------------------------------------------------------------------
+   1 · ROOT — register-independent tokens
+   ------------------------------------------------------------------------ */
+:root {
+  /* raw palette */
+  --lg-purple:      #6F43D5;  /* brand anchor — LOCKED */
+  --lg-purple-deep: #39206F;  /* display on paper */
+  --lg-lavender:    #A080ED;  /* gradient mid · accent on ink */
+  --lg-purple-lift: color-mix(in srgb, var(--lg-purple) 50%, var(--lg-lavender));  /* purple→lavender midpoint — DERIVED by mix, never typed */
+  --lg-cyan:        #8BDDD3;  /* the hands — links, live · INK ONLY as text */
+  /* cyan's paper voice — DERIVED, not picked: hue 172.8°
+     and sat .55 held from #8BDDD3, lightness .71 → .33
+     until the stop computed ≥ 4.6:1 on white. Measured
+     4.62:1 — clears AA. LOCKED: nobody "brightens the
+     teal back". Exists for --lg-grad-paper-full only. */
+  --lg-teal-deep:   #268277;
+  --lg-acid:        #EAFF95;  /* the act — ink only, never on paper */
+  /* identity only — the fourth APP MARK and nothing else. Added
+     2026-07-26 because the chromatic palette was two hue families,
+     and once the contrast floor removed purple, purpleDeep and
+     tealDeep, and the house law removed acid, three usable marks
+     had to cover four apps. 7.2:1 on ink · dE 22.6 from the nearest
+     family member, the widest gap in the set.
+     NOT A STATUS and NOT THE ACT: it sits dE 10.2 from err.ink, so
+     it must never carry meaning a receipt already owns. */
+  --lg-coral:       #F0796A;
+
+  /* neutrals — ink register */
+  --lg-ink-bg:     #0A0A0F;
+  --lg-ink-raised: #14121F;
+  --lg-ink-text:   #F2F2F2;
+  --lg-ink-muted:  #8A8F98;
+  --lg-hair-ink:   rgba(242, 242, 242, .14);
+
+  /* neutrals — paper register */
+  --lg-paper-bg:    #FFFFFF;
+  --lg-paper-text:  #292929;
+  --lg-paper-muted: #66676C;
+  --lg-surface:     #F0F1F2;
+  --lg-border:      #C9CBD0;
+  --lg-hair-paper:  #E1E2E6;
+
+  /* gradient family — the only one. One gradient moment per page.
+     G1 · --lg-grad-paper stays the DEFAULT paper gradient.
+     G2 · --lg-grad-paper-full is the allowed variant for when the full-family
+          story is the point — its tail is ALWAYS --lg-teal-deep, never raw
+          cyan. Prefer non-text carriers (hairline rules, chart fills on
+          --lg-surface tracks, where 3:1 applies). As TEXT it is display-only:
+          the tested ~23px scale or larger — the tail stop clears 4.5:1 with
+          only 0.12 of margin, so re-measure before setting it smaller. To
+          make it a page's one gradient moment, set
+          --lg-grad: var(--lg-grad-paper-full) on that surface.
+     G3 · the ink ramp on white is BANNED for text permanently — end-stop
+          #8BDDD3 = 1.57:1, mid #A080ED = 3.09:1. Documented, never shipped.
+     Future work: derive a lavender-family mid-stop guardian for G2's
+     purple-to-teal leg the same S/L-held way the teal was derived. */
+  --lg-grad-ink:        linear-gradient(94deg, #6F43D5 0%, #A080ED 46%, #8BDDD3 100%);
+  --lg-grad-paper:      linear-gradient(94deg, #39206F 0%, #6F43D5 100%);
+  --lg-grad-paper-full: linear-gradient(94deg, #39206F 0%, #6F43D5 46%, var(--lg-teal-deep) 100%);
+
+  /* BAND — the deep-purple synthesis slab. Deliberately register-INDEPENDENT:
+     a band is the same object on ink and on paper, so a page peaks in the same
+     place in both registers. Its foregrounds are declared here, not by hand.
+     #F2F2F2 on #39206F = 11.65:1 · the .72 tint = 6.74:1 — both clear AA. */
+  --lg-band-bg:     var(--lg-purple-deep);
+  --lg-band-text:   var(--lg-ink-text);
+  --lg-band-text-2: rgba(242, 242, 242, .72);
+  --lg-band-line:   rgba(242, 242, 242, .28);
+
+  /* font stacks — faces load via fonts-ledger.css, not here */
+  --lg-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --lg-grot:  'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --lg-mono:  'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* motion — four durations, one curve, nothing bounces */
+  --lg-t-100:       100ms;  /* micro · taps, toggles */
+  --lg-t-300:       300ms;  /* hover · lifts, hairlines */
+  --lg-t-600:       600ms;  /* entrance · fadeUp */
+  --lg-t-900:       900ms;  /* hero · one per page */
+  --lg-t-step:      180ms;  /* workflow step state change · the 160-200ms band #68 asks for, as a token because ad hoc app durations are refused */
+  --lg-t-stagger:   80ms;  /* entrance list step · capped at six */
+  --lg-t-flow-step: 240ms;  /* narrative beat · one flow stage after the previous (3 × stagger) */
+  --lg-t-breathe:   8000ms;  /* ambient settle pulse · whole seconds live outside the interaction scale */
+  --lg-ease:        cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* radii */
+  --lg-r-2:    2px;  /* bars, chips */
+  --lg-r-3:    3px;  /* tags, nodes */
+  --lg-r-6:    6px;  /* buttons, insets */
+  --lg-r-8:    8px;  /* cards, panels */
+  --lg-r-10:   10px;  /* wraps */
+  --lg-r-pill: 999px;  /* badges, gradient bars */
+
+  /* tracking */
+  --lg-track-kicker: .22em;  /* mono kickers */
+  --lg-track-label:  .2em;  /* sublabels, stat units */
+  --lg-track-meta:   .14em;  /* meta rows, durations */
+  --lg-track-annot:  .06em;  /* inline mono annotations */
+  --lg-track-tight:  -.01em;  /* serif display */
+
+  /* CONTROL GEOMETRY — the shared row (#17). A native <select> derives its
+     height from font metrics unless given one explicitly, and under Space
+     Grotesk that put it 2px proud of its siblings — 37px against 35px in one
+     toolbar, read via getComputedStyle, not eyeballed (D3, #16). This is the
+     failure app-implications.md §3.1.3 predicted: "migration requires
+     explicit line-height and control-height tokens first, or the app subtly
+     changes shape." So controls STATE their height from this token instead
+     of deriving it from line-height arithmetic, and a mismatched native
+     control becomes a token bug, not a per-app guess.
+     h:   what .lg-input already shipped — 14px grot × 1.4 + 11px×2 padding
+          + 1px×2 border = 43.6 → held at 44, the .4 absorbed by centring.
+     hSm: the compact row. The app that found D3 hand-picked 8px padding on
+          13px grot and measured 35 and 37; this token holds that row at 36. */
+  --lg-ctrl-h:    44px;  /* default control row — input, select, button */
+  --lg-ctrl-h-sm: 36px;  /* compact row — toolbars, dense headers */
+  --lg-ctrl-lh:   1.4;  /* UI line-height for control text */
+}
+
+/* ------------------------------------------------------------------------
+   2 · REGISTERS — semantic tokens
+   .lg-ink / .lg-paper (also [data-register="ink|paper"]).
+   THE SWAP RULE lives here: --lg-action-bg/-text flip between registers —
+   #EAFF95 on #0A0A0F for ink, #6F43D5 with #FFFFFF text for paper.
+   Cyan is never text on white: --lg-signal hands the job to purple on paper.
+   ------------------------------------------------------------------------ */
+.lg-ink,
+[data-register="ink"] {
+  --lg-bg:          var(--lg-ink-bg);
+  --lg-bg-raised:   var(--lg-ink-raised);
+  --lg-text:        var(--lg-ink-text);
+  --lg-text-2:      var(--lg-ink-muted);
+  --lg-accent:      var(--lg-lavender);  /* lavender accents on ink */
+  --lg-signal:      var(--lg-cyan);  /* cyan = the hands, ink only */
+  --lg-action-bg:   var(--lg-acid);  /* yellow acts on ink */
+  --lg-action-text: var(--lg-ink-bg);
+  --lg-line:        var(--lg-hair-ink);
+  --lg-display-ink: var(--lg-ink-text);  /* display colour */
+  --lg-grad:        var(--lg-grad-ink);
+  --lg-ghost-line:  rgba(242, 242, 242, .32);
+  --lg-panel-bg:    var(--lg-ink-raised);
+  --lg-stamp-bg:    var(--lg-ink-raised);
+  --lg-action-glow: rgba(234, 255, 149, .16);
+  --lg-focus:       var(--lg-signal);  /* cyan ring on ink */
+
+  /* aurora — ink treatment: the v4 recipe VERBATIM, approved as measured.
+     Glow ADDS light to ink, so no mask is needed. Worst case (brightest px
+     under the text zone, drift frozen): #141023 — #F2F2F2 text 16.63:1 ·
+     #8A8F98 muted 5.73:1 · #8BDDD3 cyan 11.86:1. */
+  --lg-aurora-mask:   none;
+  --lg-aurora-blur:   30px;
+  --lg-aurora-b1:     radial-gradient(circle, rgba(111, 67, 213, .12) 0%, transparent 70%);
+  --lg-aurora-b1-box: 10% 65% 65% 5%;  /* = 30% × 25% at top 10% / left 5% */
+  --lg-aurora-b2:     radial-gradient(circle, rgba(139, 221, 211, .08) 0%, transparent 70%);
+  --lg-aurora-b2-box: 45% 20% 35% 55%;  /* = 25% × 20% at top 45% / left 55% */
+  --lg-aurora-b3:     radial-gradient(circle, rgba(111, 67, 213, .08) 0%, transparent 70%);
+  --lg-aurora-b3-box: 5% 30% 77% 50%;  /* = 20% × 18% at top 5% / left 50% */
+  --lg-aurora-b4:     none;  /* ink runs three bands — the fourth stays dark */
+  --lg-aurora-b4-box: auto;
+
+  background: var(--lg-bg);
+  color: var(--lg-text);
+}
+
+.lg-paper,
+[data-register="paper"] {
+  --lg-bg:          var(--lg-paper-bg);
+  --lg-bg-raised:   var(--lg-surface);
+  --lg-text:        var(--lg-paper-text);
+  --lg-text-2:      var(--lg-paper-muted);
+  --lg-accent:      var(--lg-purple);  /* purple accents on paper */
+  --lg-signal:      var(--lg-purple);  /* cyan never text-on-white */
+  --lg-action-bg:   var(--lg-purple);  /* purple acts on paper */
+  --lg-action-text: #FFFFFF;
+  --lg-line:        var(--lg-hair-paper);
+  --lg-display-ink: var(--lg-purple-deep);  /* deep purple carries display */
+  --lg-grad:        var(--lg-grad-paper);  /* the gradient deepens */
+  --lg-ghost-line:  var(--lg-border);
+  --lg-panel-bg:    var(--lg-surface);
+  --lg-stamp-bg:    rgba(111, 67, 213, .05);
+  --lg-action-glow: rgba(111, 67, 213, .28);
+  --lg-focus:       var(--lg-accent);  /* purple ring on paper */
+
+  /* aurora — paper treatment: EDGE AURORA. Glow cannot add light to white,
+     so the bands turn vivid instead — alphas CAPPED at .24/.28/.26/.20,
+     hues restricted to purple/lavender/cyan, NEVER acid — and keep to the
+     perimeter: a radial mask clears the centre so text rides pure paper.
+     THE MASK IS PART OF THIS TOKEN, not of any layout — bands may drift,
+     the mask never moves or scales. Worst case (darkest px under the text
+     zone, drift frozen): #EEE8FA — #292929 body 12.16:1 · #66676C muted
+     4.72:1 (the BINDING constraint, ~5% headroom) · #6F43D5 purple 5.10:1.
+     Re-probe from rendered pixels if ANY tint, alpha, mask geometry or blur
+     value changes — the pass belongs to this exact recipe. Cyan on white
+     drifts green-adjacent: verify by sample, never by eye. */
+  --lg-aurora-mask:   radial-gradient(ellipse 74% 66% at 42% 46%, transparent 0%, transparent 44%, #000 82%);
+  --lg-aurora-blur:   32px;
+  --lg-aurora-b1:     radial-gradient(circle, rgba(111, 67, 213, .24) 0%, transparent 70%);
+  --lg-aurora-b1-box: -14% 66% 70% -10%;  /* = 44% × 44% at top −14% / left −10% */
+  --lg-aurora-b2:     radial-gradient(circle, rgba(139, 221, 211, .28) 0%, transparent 70%);
+  --lg-aurora-b2-box: 58% -10% -10% 60%;  /* = 50% × 52% at top 58% / left 60% */
+  --lg-aurora-b3:     radial-gradient(circle, rgba(160, 128, 237, .26) 0%, transparent 70%);
+  --lg-aurora-b3-box: -14% -10% 72% 68%;  /* = 42% × 42% at top −14% / left 68% */
+  --lg-aurora-b4:     radial-gradient(circle, rgba(111, 67, 213, .20) 0%, transparent 70%);
+  --lg-aurora-b4-box: 72% 70% -12% -8%;  /* = 38% × 40% at top 72% / left −8% */
+
+  background: var(--lg-bg);
+  color: var(--lg-text);
+}
+
+/* ------------------------------------------------------------------------
+   3 · STATUS TOKENS — raw values (RATIFIED — approach A, brand-tempered)
+   STATUS TOKENS — RATIFIED 2026-07-23 (approach A, brand-tempered).
+   NO literal lives here: every value below is
+   pulled from the derivation in scripts/derive-status.mjs at build time,
+   which re-runs its floors, acid-adjacency gates and wash asserts on every
+   generate. A hand-edited status hex is a broken build, not a tweak.
+   Derived, never picked: hue anchored per semantic, saturation .5467 held
+   from cyan #8BDDD3 (the teal-deep method), lightness EARNED until the
+   register's floor passes on the quantized hex.
+   ------------------------------------------------------------------------ */
+:root {
+  --lg-err-ink:    #CA5C4B;  /* 4.84:1 on #0A0A0F · 4.53:1 on #14121F */
+  --lg-err-paper:  #BA4837;  /* 5.16:1 on #FFFFFF · 4.6:1 on #F9F0EF */
+  --lg-warn-ink:   #CEA059;  /* 8.27:1 on #0A0A0F · 7.74:1 on #14121F  [OVERRIDE: L lifted .412 → .58 — bronze is not caution] */
+  --lg-warn-paper: #986D2D;  /* 4.6:1 on #FFFFFF */
+  --lg-ok-ink:     #2A8E5F;  /* 4.83:1 on #0A0A0F · 4.52:1 on #14121F */
+  --lg-ok-paper:   #247C53;  /* 5.14:1 on #FFFFFF · 4.64:1 on #EDF5F1 */
+  /* control chrome — the WCAG 1.4.11 floor, earned the house way. The resting
+     boundary of an empty input, an unchecked box and an off switch-track is
+     the ONLY thing that identifies the component, so it never rides the
+     decorative --lg-ghost-line (paper #C9CBD0 = 1.62:1 · ink .32 ghost ≈
+     2.6:1 — both under the 3:1 non-text floor). Ghost-line stays on ghost
+     buttons and dotted leaders, whose text label identifies them. */
+  --lg-ctrl-ink:   rgba(242, 242, 242, .40);  /* 3.5:1 on #0A0A0F · 3.56:1 on #14121F */
+  --lg-ctrl-paper: #90959F;  /* 3.01:1 on #FFFFFF */
+}
+
+/* ------------------------------------------------------------------------
+   4 · STATUS SEMANTICS — register-resolved (RATIFIED)
+   STATUS SEMANTICS — register-resolved. The washes are composited OPAQUE
+   over the register's own page bind (--lg-bg), so status text NEVER rides
+   an unmeasured surface: on a raised card the pill simply keeps its page
+   chip — the same grammar that keeps cyan on an ink chip on paper.
+   · ONE wash strength, both registers: 8% of the status colour over the
+     page bind. The wash IS a binding surface, so the paper err/ok stops are
+     EARNED ON THE COMPOSITE.
+   · warning NEVER fills, in either register — its wash is always the page
+     bind, the ONE deliberate outline. An outline chip can never compete
+     with a filled acid act; that rule, not the bronze, is the durable
+     acid-distance guarantee.
+   · info is an ALIAS of --lg-accent — zero new hues, never a duplicated
+     literal. If accent moves, info inherits and only the floors are re-run.
+   ------------------------------------------------------------------------ */
+.lg-ink,
+[data-register="ink"] {
+  --lg-err:       var(--lg-err-ink);
+  --lg-warn:      var(--lg-warn-ink);
+  --lg-ok:        var(--lg-ok-ink);
+  --lg-info:      var(--lg-accent);  /* alias — lavender on ink */
+  --lg-err-wash:  color-mix(in srgb, var(--lg-err)  8%, var(--lg-bg));
+  --lg-ok-wash:   color-mix(in srgb, var(--lg-ok)   8%, var(--lg-bg));
+  --lg-info-wash: color-mix(in srgb, var(--lg-info) 8%, var(--lg-bg));
+  --lg-warn-wash: var(--lg-bg);  /* warning never fills */
+  --lg-ctrl-line: var(--lg-ctrl-ink);  /* control chrome ≥ 3:1 */
+}
+
+.lg-paper,
+[data-register="paper"] {
+  --lg-err:       var(--lg-err-paper);
+  --lg-warn:      var(--lg-warn-paper);
+  --lg-ok:        var(--lg-ok-paper);
+  --lg-info:      var(--lg-accent);  /* alias — purple on paper */
+  --lg-err-wash:  color-mix(in srgb, var(--lg-err)  8%, var(--lg-bg));
+  --lg-ok-wash:   color-mix(in srgb, var(--lg-ok)   8%, var(--lg-bg));
+  --lg-info-wash: color-mix(in srgb, var(--lg-info) 8%, var(--lg-bg));
+  --lg-warn-wash: var(--lg-bg);  /* warning never fills */
+  --lg-ctrl-line: var(--lg-ctrl-paper);  /* control chrome ≥ 3:1 */
+}
