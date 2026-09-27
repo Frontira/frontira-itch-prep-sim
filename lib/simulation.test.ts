@@ -94,3 +94,24 @@ test("venue activity acts as a bounded cover prior with an explicit dish contrib
   assert.ok(gnocchi);
   assert.ok(gnocchi.contributions.venue > 0);
 });
+
+test("explicit waste versus sellout presets move every prep number in the expected direction", () => {
+  const inputs = {
+    covers: 128,
+    weatherUplift: 0,
+    trendUplift: 0,
+    eventUplift: 0,
+    noShowRate: 6,
+    seed: 42,
+  };
+  const lean = simulatePrep({ ...inputs, safetyStock: -18 });
+  const balanced = simulatePrep({ ...inputs, safetyStock: 0 });
+  const cautious = simulatePrep({ ...inputs, safetyStock: 18 });
+  for (let index = 0; index < lean.recommendations.length; index += 1) {
+    const leanPrep = lean.recommendations[index]?.recommendedPrep ?? 0;
+    const balancedPrep = balanced.recommendations[index]?.recommendedPrep ?? 0;
+    const cautiousPrep = cautious.recommendations[index]?.recommendedPrep ?? 0;
+    assert.ok(leanPrep <= balancedPrep);
+    assert.ok(balancedPrep <= cautiousPrep);
+  }
+});

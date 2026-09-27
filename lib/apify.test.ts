@@ -13,10 +13,19 @@ test("normalizes the Apify Google Places actor's location and identity fields", 
       location: { lat: 37.7936, lng: -122.3958 },
       totalScore: 4.6,
       reviewsCount: 208,
+      price: "$20–30",
+      openingHours: [
+        { day: "Monday", hours: "Closed" },
+        { day: "Tuesday", hours: "5 PM to 10 PM" },
+      ],
       popularTimesHistogram: {
         Mo: [{ hour: 18, occupancyPercent: 35 }],
         Tu: [{ hour: 18, occupancyPercent: 75 }],
       },
+      reviewsTags: [
+        { title: "pasta", count: 4 },
+        { title: "gnocchi", count: 12 },
+      ],
       scrapedAt: "2026-09-27T18:30:00.000Z",
     },
     undefined,
@@ -32,6 +41,15 @@ test("normalizes the Apify Google Places actor's location and identity fields", 
   assert.equal(activity.reviewCount, 208);
   assert.equal(activity.category, "Italian restaurant");
   assert.equal(activity.menuUrl, "https://example.com/menu");
+  assert.equal(activity.priceRange, "$20–30");
+  assert.deepEqual(activity.openingHours, [
+    { day: "Monday", hours: "Closed" },
+    { day: "Tuesday", hours: "5 PM to 10 PM" },
+  ]);
+  assert.deepEqual(activity.reviewTopics, [
+    { topic: "gnocchi", count: 12 },
+    { topic: "pasta", count: 4 },
+  ]);
   assert.deepEqual(activity.popularTimes, [
     { day: "Monday", hours: [{ hour: 18, popularity: 35 }] },
     { day: "Tuesday", hours: [{ hour: 18, popularity: 75 }] },

@@ -7,6 +7,8 @@ import { type SelectedVenue, VenueConnector } from "@/components/venue-connector
 import { dinnerPopularityEffect, type VenueActivity } from "@/lib/apify";
 import type { JevDecision } from "@/lib/jev";
 import {
+  DEMO_MENU,
+  type MenuItem,
   type PrepRecommendation,
   type ScenarioInputs,
   type SimulationResult,
@@ -24,6 +26,12 @@ const dayLabel = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 const EMPTY_WEATHER_HORIZON: Array<WeatherSignal | null> = [null, null, null];
+const VENUE_STORAGE_KEY = "itch-prep-venue-v1";
+const riskOptions = [
+  { label: "Avoid waste", value: -18, detail: "Lean prep" },
+  { label: "Balanced", value: 0, detail: "Middle ground" },
+  { label: "Avoid sellouts", value: 18, detail: "Extra cover" },
+] as const;
 const serviceLocation = {
   label: "San Francisco city center",
   latitude: 37.7749,
@@ -40,7 +48,7 @@ const initialInputs: ScenarioInputs = {
   eventUplift: 12,
   venueUplift: 0,
   noShowRate: 6,
-  safetyStock: 12,
+  safetyStock: 0,
   runs: 10_000,
   seed: 42,
 };
@@ -79,6 +87,7 @@ function Field({
           id={id}
           data-ledger-ui="input"
           type="number"
+          step="any"
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
           className="pr-12"
@@ -432,6 +441,8 @@ export default function Home() {
   const [draft, setDraft] = useState(initialInputs);
   const [venue, setVenue] = useState<SelectedVenue | null>(null);
   const [activity, setActivity] = useState<VenueActivity | null>(null);
+  const [menu, setMenu] = useState<MenuItem[]>(DEMO_MENU);
+  const [venueRestored, setVenueRestored] = useState(false);
   const [weatherHorizon, setWeatherHorizon] = useState<WeatherSignal[]>([]);
   const [weatherError, setWeatherError] = useState(false);
   const [trends, setTrends] = useState<TrendsSignal>(localTrendsSnapshot);
@@ -467,19 +478,90 @@ export default function Home() {
           venueUplift: signals.venue ? (venueEffect ?? 0) : 0,
           seed: 42 + index,
         };
-        return { weather, venueEffect, inputs, result: simulatePrep(inputs) };
+        return { weather, venueEffect, inputs, result: simulatePrep(inputs, menu) };
       }),
-    [draft, horizonWeather, signals, trends.momentum, trendsReady, venue, activity],
+    [draft, horizonWeather, signals, trends.momentum, trendsReady, venue, activity, menu],
   );
   const selectedPlan = horizonPlans[selectedDay] ?? horizonPlans[0];
   const weather = selectedPlan?.weather ?? null;
-  const result = selectedPlan?.result ?? simulatePrep(initialInputs);
+  const result = selectedPlan?.result ?? simulatePrep(initialInputs, menu);
   const selectedDateLabel = formatServiceDate(weather?.serviceDate, selectedDay);
   const selectedVenueEffect = selectedPlan?.venueEffect ?? null;
   const savings = Math.max(0, result.baselineWasteCost - result.projectedWasteCost);
   const selectedRecommendation =
     result.recommendations.find((item) => item.id === selectedItem) ?? result.recommendations[0];
   const selectedDecision = decision?.items.find((item) => item.id === selectedRecommendation?.id);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(VENUE_STORAGE_KEY);
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (parsed && typeof parsed === "object" && "venue" in parsed) {
+          const record = parsed as {
+            venue?: SelectedVenue;
+            activity?: VenueActivity;
+            menu?: MenuItem[];
+          };
+          if (
+            record.venue &&
+            typeof record.venue.placeId === "string" &&
+            Number.isFinite(record.venue.latitude) &&
+            Number.isFinite(record.venue.longitude)
+          ) {
+            setVenue(record.venue);
+            if (
+              Array.isArray(record.menu) &&
+              record.menu.length === DEMO_MENU.length &&
+              record.menu.every(
+                (item, index) =>
+                  item?.id === DEMO_MENU[index]?.id &&
+                  typeof item.name === "string" &&
+                  Number.isFinite(item.orderShare) &&
+                  Number.isFinite(item.baselinePar) &&
+                  Number.isFinite(item.unitCost),
+              )
+            )
+              setMenu(record.menu);
+            const savedActivity = record.activity;
+            if (savedActivity && Array.isArray(savedActivity.popularTimes)) {
+              setActivity({
+                ...savedActivity,
+                openingHours: Array.isArray(savedActivity.openingHours)
+                  ? savedActivity.openingHours
+                  : [],
+                reviewTopics: Array.isArray(savedActivity.reviewTopics)
+                  ? savedActivity.reviewTopics
+                  : [],
+              });
+              setSignals((current) => ({
+                ...current,
+                trends: false,
+                events: false,
+                venue: savedActivity.popularTimes.length > 0,
+              }));
+            } else {
+              setSignals((current) => ({ ...current, trends: false, events: false }));
+            }
+          }
+        }
+      }
+    } catch {
+      // A malformed or blocked browser cache must never prevent the demo from opening.
+    }
+    setVenueRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!venueRestored) return;
+    try {
+      if (venue)
+        window.localStorage.setItem(VENUE_STORAGE_KEY, JSON.stringify({ venue, activity, menu }));
+      else window.localStorage.removeItem(VENUE_STORAGE_KEY);
+    } catch {
+      // The connection still works when private browsing disallows local storage.
+    }
+  }, [venue, activity, menu, venueRestored]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -509,6 +591,8 @@ export default function Home() {
     const samePlace = Boolean(venue && next && venue.placeId === next.placeId);
     setVenue(next);
     if (!samePlace) {
+      setMenu(DEMO_MENU);
+      setSelectedItem("gnocchi");
       setTrendsScope("demo");
       setSignals((current) => ({
         ...current,
@@ -534,6 +618,12 @@ export default function Home() {
     setSummary(null);
   }
 
+  function updateMenuItem(id: string, changes: Partial<MenuItem>) {
+    setMenu((current) => current.map((item) => (item.id === id ? { ...item, ...changes } : item)));
+    setDecision(null);
+    setSummary(null);
+  }
+
   function updateSignals(next: typeof signals) {
     setSignals(next);
     setDecision(null);
@@ -548,7 +638,7 @@ export default function Home() {
 
   async function runScenario() {
     const nextInputs = selectedPlan?.inputs ?? initialInputs;
-    const nextResult = simulatePrep(nextInputs);
+    const nextResult = simulatePrep(nextInputs, menu);
     setDeciding(true);
     try {
       const evidence = {
@@ -664,12 +754,6 @@ export default function Home() {
                 onChange={(noShowRate) => updateDraft({ ...draft, noShowRate })}
               />
               <Field
-                label="Safety stock"
-                value={draft.safetyStock}
-                suffix="%"
-                onChange={(safetyStock) => updateDraft({ ...draft, safetyStock })}
-              />
-              <Field
                 label="Event effect"
                 value={draft.eventUplift}
                 suffix="%"
@@ -723,9 +807,130 @@ export default function Home() {
           <VenueConnector
             venue={venue}
             activity={activity}
+            selectedDishName={selectedRecommendation?.name ?? "selected dish"}
             onVenueChange={selectVenue}
             onActivityChange={updateActivity}
+            onUseReviewTopic={(topic) => updateMenuItem(selectedItem, { name: topic })}
           />
+          <section
+            data-testid="morning-card"
+            className="rounded-lg border border-accent/60 bg-accent/8 p-5"
+          >
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[.18em] text-accent">
+                  One-minute morning answer
+                </p>
+                <h2 className="mt-2 font-serif text-3xl">
+                  {selectedDateLabel} · prep these quantities
+                </h2>
+                <p className="mt-2 text-xs text-text-2">
+                  {venue ? `${venue.name} · real venue context` : "San Francisco demo venue"} ·{" "}
+                  {number.format(result.effectiveCovers)} expected covers
+                </p>
+              </div>
+              <span className="rounded-full border border-warn/60 bg-warn-wash px-3 py-1 font-mono text-[9px] uppercase tracking-[.1em] text-warn">
+                Illustrative demand, not POS history
+              </span>
+            </div>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {result.recommendations.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedItem(item.id)}
+                  className={`flex items-center justify-between gap-3 rounded-md border p-3 text-left transition-colors ${selectedItem === item.id ? "border-accent bg-bg-raised" : "border-line bg-bg-raised/50 hover:border-accent/60"}`}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">{item.name}</span>
+                    <span className="block font-mono text-[9px] uppercase tracking-[.1em] text-text-2">
+                      {item.recommendedPrep - item.baselinePar >= 0 ? "+" : ""}
+                      {item.recommendedPrep - item.baselinePar} vs current par
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-serif text-3xl">{item.recommendedPrep}</span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line/70 pt-4">
+              <p className="mr-2 font-mono text-[10px] uppercase tracking-[.12em] text-text-2">
+                Which mistake hurts more?
+              </p>
+              {riskOptions.map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  aria-pressed={draft.safetyStock === option.value}
+                  data-testid={`risk-${option.value}`}
+                  onClick={() => updateDraft({ ...draft, safetyStock: option.value })}
+                  className={`rounded-md border px-3 py-2 text-xs ${draft.safetyStock === option.value ? "border-ok bg-ok-wash text-ok" : "border-line text-text-2 hover:border-ok/60"}`}
+                >
+                  <span className="font-semibold">{option.label}</span>
+                  <span className="ml-2 opacity-70">{option.detail}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-text-2">
+              This choice shifts the simulation target from lean to cautious prep. Tap any quantity
+              for its uncertainty and source breakdown below.
+            </p>
+          </section>
+          {selectedRecommendation ? (
+            <section className="rounded-lg border border-line bg-bg-raised p-5">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[.16em] text-accent">
+                    Operator calibration
+                  </p>
+                  <h2 className="mt-1 font-serif text-2xl">Make the prep sheet yours</h2>
+                </div>
+                <p className="max-w-sm text-xs text-text-2">
+                  Select a prep row, then use a guest-mentioned dish or enter your own. Shares,
+                  costs and pars are assumptions until the operator confirms them.
+                </p>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div data-ledger-field>
+                  <label htmlFor="selected-dish-name">Selected dish</label>
+                  <input
+                    id="selected-dish-name"
+                    data-ledger-ui="input"
+                    value={selectedRecommendation.name}
+                    maxLength={80}
+                    onChange={(event) => updateMenuItem(selectedItem, { name: event.target.value })}
+                  />
+                </div>
+                <Field
+                  label="Orders per 100 covers"
+                  value={Math.round(selectedRecommendation.orderShare * 100)}
+                  suffix="%"
+                  onChange={(value) =>
+                    updateMenuItem(selectedItem, {
+                      orderShare: Math.max(0, Math.min(1, value / 100)),
+                    })
+                  }
+                />
+                <Field
+                  label="Current par"
+                  value={selectedRecommendation.baselinePar}
+                  onChange={(value) =>
+                    updateMenuItem(selectedItem, { baselinePar: Math.max(0, Math.round(value)) })
+                  }
+                />
+                <Field
+                  label="Waste cost per portion"
+                  value={selectedRecommendation.unitCost}
+                  suffix="$"
+                  onChange={(value) =>
+                    updateMenuItem(selectedItem, { unitCost: Math.max(0, value) })
+                  }
+                />
+              </div>
+              <p className="mt-3 font-mono text-[9px] uppercase tracking-[.1em] text-text-2">
+                Apify names and context · operator-entered economics · simulated quantities
+              </p>
+            </section>
+          ) : null}
           <ThreeDayRunway
             plans={horizonPlans}
             selectedItem={selectedItem}

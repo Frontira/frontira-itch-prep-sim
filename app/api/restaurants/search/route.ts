@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
-import { type GooglePlacesSearchResponse, normalizeRestaurantPlaces } from "@/lib/places";
+import {
+  type GooglePlacesSearchResponse,
+  normalizeApifyRestaurantPlaces,
+  normalizeRestaurantPlaces,
+} from "@/lib/places";
+
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+const APIFY_ENDPOINT =
+  "https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items";
 
 const FIELD_MASK =
   "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.websiteUri";
@@ -13,12 +23,42 @@ export async function GET(request: Request) {
     );
   }
 
+  const apifyToken = process.env.APIFY_TOKEN;
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
+  if (!apifyToken && !apiKey)
     return NextResponse.json({ error: "Restaurant search is not configured." }, { status: 503 });
-  }
 
   try {
+    if (apifyToken) {
+      const response = await fetch(`${APIFY_ENDPOINT}?timeout=50&format=json&clean=true`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apifyToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          searchStringsArray: [query],
+          maxCrawledPlacesPerSearch: 5,
+          scrapePlaceDetailPage: false,
+          maxReviews: 0,
+          scrapeReviewsPersonalData: false,
+          scrapeContacts: false,
+          maximumLeadsEnrichmentRecords: 0,
+          language: "en",
+        }),
+        signal: AbortSignal.timeout(52_000),
+        cache: "no-store",
+      });
+      if (!response.ok)
+        return NextResponse.json(
+          { error: "Apify could not complete the restaurant search." },
+          { status: 502 },
+        );
+      return NextResponse.json({ places: normalizeApifyRestaurantPlaces(await response.json()) });
+    }
+    if (!apiKey)
+      return NextResponse.json({ error: "Restaurant search is not configured." }, { status: 503 });
+
     const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
       headers: {

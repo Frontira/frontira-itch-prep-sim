@@ -41,18 +41,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Restaurant enrichment is not configured" }, { status: 503 });
   }
 
-  const actorInput = googleMapsUrl
+  const actorInput = placeId
     ? {
-        startUrls: [{ url: googleMapsUrl }],
-        maxCrawledPlacesPerSearch: 1,
-        scrapePlaceDetailPage: true,
-        maxReviews: 0,
-        scrapeReviewsPersonalData: false,
-        scrapeContacts: false,
-        maximumLeadsEnrichmentRecords: 0,
-        language: "en",
-      }
-    : {
         placeIds: [placeId],
         maxCrawledPlacesPerSearch: 1,
         scrapePlaceDetailPage: true,
@@ -61,7 +51,19 @@ export async function POST(request: Request) {
         scrapeContacts: false,
         maximumLeadsEnrichmentRecords: 0,
         language: "en",
-      };
+      }
+    : googleMapsUrl
+      ? {
+          startUrls: [{ url: googleMapsUrl }],
+          maxCrawledPlacesPerSearch: 1,
+          scrapePlaceDetailPage: true,
+          maxReviews: 0,
+          scrapeReviewsPersonalData: false,
+          scrapeContacts: false,
+          maximumLeadsEnrichmentRecords: 0,
+          language: "en",
+        }
+      : null;
 
   try {
     const response = await fetch(`${APIFY_ENDPOINT}?timeout=50&format=json&clean=true`, {

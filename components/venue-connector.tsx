@@ -20,8 +20,10 @@ export type SelectedVenue = {
 type Props = {
   venue: SelectedVenue | null;
   activity: VenueActivity | null;
+  selectedDishName: string;
   onVenueChange: (venue: SelectedVenue | null) => void;
   onActivityChange: (activity: VenueActivity | null) => void;
+  onUseReviewTopic: (topic: string) => void;
 };
 
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -34,7 +36,14 @@ function dinnerMean(activity: VenueActivity, day: string) {
   return samples?.length ? samples.reduce((sum, value) => sum + value, 0) / samples.length : null;
 }
 
-export function VenueConnector({ venue, activity, onVenueChange, onActivityChange }: Props) {
+export function VenueConnector({
+  venue,
+  activity,
+  selectedDishName,
+  onVenueChange,
+  onActivityChange,
+  onUseReviewTopic,
+}: Props) {
   const [query, setQuery] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
   const [matches, setMatches] = useState<RestaurantPlace[]>([]);
@@ -43,6 +52,9 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
   const [message, setMessage] = useState<string | null>(null);
   const [activityMessage, setActivityMessage] = useState<string | null>(null);
   const daily = activity ? weekdays.map((day) => ({ day, value: dinnerMean(activity, day) })) : [];
+  const activityAgeDays = activity
+    ? Math.floor((Date.now() - Date.parse(activity.observedAt)) / 86_400_000)
+    : 0;
 
   async function search(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,9 +84,10 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
     setActivityMessage(null);
     setMatches([]);
     setMessage(null);
+    void enrich(place.googleMapsUrl, place.placeId, place);
   }
 
-  async function enrich(googleMapsUrl: string, placeId?: string) {
+  async function enrich(googleMapsUrl: string, placeId?: string, selected?: SelectedVenue) {
     setEnriching(true);
     setActivityMessage(null);
     onActivityChange(null);
@@ -91,12 +104,13 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
       };
       if (!response.ok || !data.activity)
         throw new Error(data.error ?? "Maps activity is unavailable");
-      const sameVenue = venue?.placeId === data.activity.placeId;
+      const currentVenue = selected ?? venue;
+      const sameVenue = currentVenue?.placeId === data.activity.placeId;
       if (data.activity.latitude !== undefined && data.activity.longitude !== undefined) {
         onVenueChange({
           placeId: data.activity.placeId,
-          name: data.activity.title ?? venue?.name ?? "Google Maps restaurant",
-          address: data.activity.address ?? venue?.address ?? "",
+          name: data.activity.title ?? currentVenue?.name ?? "Google Maps restaurant",
+          address: data.activity.address ?? currentVenue?.address ?? "",
           latitude: data.activity.latitude,
           longitude: data.activity.longitude,
           googleMapsUrl,
@@ -130,8 +144,8 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
           <h2 className="mt-2 font-serif text-3xl">Bring a venue into the model</h2>
         </div>
         <p className="max-w-md text-xs leading-5 text-text-2">
-          Maps identifies the restaurant and its location. Apify adds a weekday traffic pattern when
-          Google Maps exposes one.
+          Find a real restaurant with Apify, then import its location, menu link, review topics and
+          weekday traffic pattern when Google Maps exposes them.
         </p>
       </div>
 
@@ -194,7 +208,7 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
             >
               <span className="block text-sm font-semibold">{place.name}</span>
               <span className="mt-1 block text-xs text-text-2">{place.address}</span>
-              <span className="mt-2 block font-mono text-[10px] text-ok">Use this restaurant</span>
+              <span className="mt-2 block font-mono text-[10px] text-ok">Import with Apify</span>
             </button>
           ))}
         </div>
@@ -262,6 +276,7 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
                 {activity.reviewCount !== undefined
                   ? `${activity.reviewCount.toLocaleString()} reviews · `
                   : ""}
+                {activity.priceRange ? `${activity.priceRange} · ` : ""}
                 observed {new Date(activity.observedAt).toLocaleString()}
               </p>
               {activity.menuUrl ? (
@@ -276,9 +291,16 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
               ) : null}
             </div>
             <p className="max-w-sm text-xs text-text-2">
-              Relative traffic only. Dish demand still needs restaurant sales data.
+              Relative traffic and review topics are context, not orders. Dish quantities remain an
+              illustrative scenario without restaurant sales data.
             </p>
           </div>
+          {Number.isFinite(activityAgeDays) && activityAgeDays >= 7 ? (
+            <p className="mt-3 rounded-md border border-warn/50 bg-warn-wash p-3 text-xs text-warn">
+              This saved venue snapshot is {activityAgeDays} days old. Refresh Apify activity before
+              using its traffic pattern for a real prep decision.
+            </p>
+          ) : null}
           {daily.some((day) => day.value !== null) ? (
             <div
               className="mt-4 grid grid-cols-7 gap-2"
@@ -303,21 +325,45 @@ export function VenueConnector({ venue, activity, onVenueChange, onActivityChang
               ))}
             </div>
           ) : null}
-          {activity.reviewTopics.length > 0 ? (
+          {activity.openingHours.length > 0 ? (
             <div className="mt-4">
               <p className="font-mono text-[9px] uppercase tracking-[.12em] text-text-2">
-                Frequent review tags · context only
+                Published service hours · confirm holiday changes
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {activity.reviewTopics.slice(0, 6).map(({ topic, count }) => (
+                {activity.openingHours.map(({ day, hours }) => (
                   <span
-                    key={topic}
+                    key={day}
                     className="rounded-full border border-line px-2 py-1 text-xs text-text-2"
                   >
-                    {topic} · {count}
+                    {day.slice(0, 3)} {hours}
                   </span>
                 ))}
               </div>
+            </div>
+          ) : null}
+          {activity.reviewTopics.length > 0 ? (
+            <div className="mt-4">
+              <p className="font-mono text-[9px] uppercase tracking-[.12em] text-text-2">
+                Guest-mentioned topics · tap a dish to replace {selectedDishName}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {activity.reviewTopics.slice(0, 6).map(({ topic, count }) => (
+                  <button
+                    key={topic}
+                    type="button"
+                    onClick={() => onUseReviewTopic(topic)}
+                    title={`Use ${topic} as the selected illustrative prep item`}
+                    className="rounded-full border border-line px-2 py-1 text-xs text-text-2"
+                  >
+                    {topic} · {count} mentions +
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-text-2">
+                You choose which topics are actual dishes. Mention counts never set order shares or
+                forecast quantities.
+              </p>
             </div>
           ) : null}
         </div>

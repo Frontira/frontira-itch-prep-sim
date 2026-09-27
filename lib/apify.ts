@@ -20,6 +20,8 @@ export type VenueActivity = {
   longitude?: number;
   rating?: number;
   reviewCount?: number;
+  priceRange?: string;
+  openingHours: Array<{ day: string; hours: string }>;
   popularTimes: PopularTimeDay[];
   reviewTopics: Array<{ topic: string; count: number }>;
 };
@@ -123,10 +125,22 @@ function normalizePopularTimes(raw: unknown): PopularTimeDay[] {
 
 function normalizeReviewTopics(raw: unknown): Array<{ topic: string; count: number }> {
   if (!Array.isArray(raw)) return [];
+  return raw
+    .flatMap((entry) => {
+      if (!isRecord(entry) || typeof entry.title !== "string") return [];
+      const count = finiteNumber(entry.count);
+      return count === undefined ? [] : [{ topic: entry.title, count }];
+    })
+    .sort((a, b) => b.count - a.count);
+}
+
+function normalizeOpeningHours(raw: unknown): Array<{ day: string; hours: string }> {
+  if (!Array.isArray(raw)) return [];
   return raw.flatMap((entry) => {
-    if (!isRecord(entry) || typeof entry.title !== "string") return [];
-    const count = finiteNumber(entry.count);
-    return count === undefined ? [] : [{ topic: entry.title, count }];
+    if (!isRecord(entry)) return [];
+    const day = normalizeDayName(entry.day);
+    const hours = typeof entry.hours === "string" ? entry.hours.trim() : "";
+    return day && hours ? [{ day, hours }] : [];
   });
 }
 
@@ -141,6 +155,7 @@ export function normalizeVenueActivity(
 
   const rating = firstNumber(raw, ["totalScore", "rating"]);
   const reviewCount = firstNumber(raw, ["reviewsCount", "reviewCount"]);
+  const priceRange = typeof raw.price === "string" ? raw.price.trim() : undefined;
   const title = typeof raw.title === "string" ? raw.title : undefined;
   const category = typeof raw.categoryName === "string" ? raw.categoryName : undefined;
   const address = typeof raw.address === "string" ? raw.address : undefined;
@@ -166,6 +181,8 @@ export function normalizeVenueActivity(
     ...(longitude === undefined ? {} : { longitude }),
     ...(rating === undefined ? {} : { rating }),
     ...(reviewCount === undefined ? {} : { reviewCount }),
+    ...(priceRange ? { priceRange } : {}),
+    openingHours: normalizeOpeningHours(raw.openingHours),
     popularTimes: normalizePopularTimes(popularitySource),
     reviewTopics: normalizeReviewTopics(raw.reviewsTags),
   };

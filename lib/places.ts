@@ -8,7 +8,7 @@ export type RestaurantPlace = {
   reviewCount?: number;
   website?: string;
   googleMapsUrl: string;
-  source: "Google Places";
+  source: "Google Places" | "Apify Google Places";
 };
 
 export type GooglePlacesSearchResponse = {
@@ -43,4 +43,61 @@ export function normalizeRestaurantPlaces(data: GooglePlacesSearchResponse): Res
       googleMapsUrl: `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(place.id)}`,
       source: "Google Places",
     }));
+}
+
+type ApifyPlace = {
+  placeId?: unknown;
+  title?: unknown;
+  address?: unknown;
+  location?: { lat?: unknown; lng?: unknown };
+  totalScore?: unknown;
+  reviewsCount?: unknown;
+  website?: unknown;
+  permanentlyClosed?: unknown;
+  temporarilyClosed?: unknown;
+};
+
+export function normalizeApifyRestaurantPlaces(data: unknown): RestaurantPlace[] {
+  if (!Array.isArray(data)) return [];
+  const seen = new Set<string>();
+  return data.flatMap((raw) => {
+    if (!raw || typeof raw !== "object") return [];
+    const place = raw as ApifyPlace;
+    if (place.permanentlyClosed === true || place.temporarilyClosed === true) return [];
+    const id = typeof place.placeId === "string" ? place.placeId.trim() : "";
+    const latitude = place.location?.lat;
+    const longitude = place.location?.lng;
+    if (
+      !id ||
+      seen.has(id) ||
+      typeof latitude !== "number" ||
+      !Number.isFinite(latitude) ||
+      typeof longitude !== "number" ||
+      !Number.isFinite(longitude)
+    )
+      return [];
+    seen.add(id);
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(id)}`;
+    return [
+      {
+        placeId: id,
+        name:
+          typeof place.title === "string" && place.title.trim()
+            ? place.title.trim()
+            : "Unnamed restaurant",
+        address: typeof place.address === "string" ? place.address : "",
+        latitude,
+        longitude,
+        ...(typeof place.totalScore === "number" && Number.isFinite(place.totalScore)
+          ? { rating: place.totalScore }
+          : {}),
+        ...(typeof place.reviewsCount === "number" && Number.isFinite(place.reviewsCount)
+          ? { reviewCount: place.reviewsCount }
+          : {}),
+        ...(typeof place.website === "string" ? { website: place.website } : {}),
+        googleMapsUrl: mapsUrl,
+        source: "Apify Google Places" as const,
+      },
+    ];
+  });
 }
