@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
+import { ControlGlyph } from "@/app/design-system/iconography";
 import { Button } from "@/components/ui/button";
 import type { JevDecision } from "@/lib/jev";
 import {
@@ -10,10 +11,17 @@ import {
   simulatePrep,
 } from "@/lib/simulation";
 import { parseGoogleTrendsCsv, type TrendsSignal } from "@/lib/trends";
-import type { WeatherSignal } from "@/lib/weather";
+import type { WeatherHorizon, WeatherSignal } from "@/lib/weather";
 
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const dayLabel = new Intl.DateTimeFormat("en-US", {
+  weekday: "long",
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const EMPTY_WEATHER_HORIZON: Array<WeatherSignal | null> = [null, null, null];
 const serviceLocation = {
   label: "San Francisco city center",
   latitude: 37.7749,
@@ -173,6 +181,150 @@ function ProbabilityBars({ probabilities }: { probabilities: Record<string, numb
   );
 }
 
+type HorizonPlan = {
+  weather: WeatherSignal | null;
+  inputs: ScenarioInputs;
+  result: SimulationResult;
+};
+
+function formatServiceDate(date: string | undefined, index: number) {
+  return date ? dayLabel.format(new Date(`${date}T12:00:00Z`)) : `Forecast day ${index + 1}`;
+}
+
+function WeatherIcon({ weather }: { weather: WeatherSignal | null }) {
+  const label = weather
+    ? `${weather.rainProbability}% rain probability, ${weather.temperatureF} degrees Fahrenheit`
+    : "Weather forecast loading";
+  return (
+    <ControlGlyph
+      name={weather && weather.rainProbability >= 40 ? "state.warning" : "state.info"}
+      size={20}
+      label={label}
+    />
+  );
+}
+
+function ThreeDayRunway({
+  plans,
+  selectedItem,
+  selectedDay,
+  onSelect,
+}: {
+  plans: HorizonPlan[];
+  selectedItem: string;
+  selectedDay: number;
+  onSelect: (index: number) => void;
+}) {
+  const recommendations = plans.map(
+    (plan) =>
+      plan.result.recommendations.find((item) => item.id === selectedItem) ??
+      plan.result.recommendations[0],
+  );
+  const domainMin = Math.min(...recommendations.map((item) => item?.demandDistribution.p10 ?? 0));
+  const domainMax = Math.max(...recommendations.map((item) => item?.demandDistribution.p90 ?? 1));
+  const domainSpan = Math.max(1, domainMax - domainMin);
+  const position = (value: number) => ((value - domainMin) / domainSpan) * 100;
+
+  return (
+    <section>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[.2em] text-ok">
+            Three-morning order runway
+          </p>
+          <h2 className="mt-2 font-serif text-3xl">Order fresh for each service</h2>
+        </div>
+        <p className="max-w-md text-right text-xs leading-5 text-text-2">
+          Assumes a fresh morning order, zero opening stock and no carryover. Select a day to
+          inspect its full distribution.
+        </p>
+      </div>
+      <fieldset className="grid gap-3 md:grid-cols-3">
+        <legend className="sr-only">Three-day order forecast</legend>
+        {plans.map((plan, index) => {
+          const recommendation = recommendations[index];
+          const distribution = recommendation?.demandDistribution;
+          const isSelected = selectedDay === index;
+          const rangeLeft = distribution ? position(distribution.p10) : 0;
+          const rangeWidth = distribution ? Math.max(2, position(distribution.p90) - rangeLeft) : 0;
+          return (
+            <button
+              key={plan.weather?.serviceDate ?? index}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => onSelect(index)}
+              className={`min-h-52 rounded-lg border p-4 text-left transition-colors ${
+                isSelected
+                  ? "border-ok bg-ok-wash/40"
+                  : "border-line bg-bg-raised hover:border-ok/50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-ok">
+                  <WeatherIcon weather={plan.weather} />
+                  <span className="font-mono text-[10px] uppercase tracking-[.12em]">
+                    {index === 0 ? "Tomorrow" : `Day ${index + 1}`}
+                  </span>
+                </div>
+                <span
+                  className={`size-2 rounded-full ${isSelected ? "bg-ok" : "bg-line"}`}
+                  aria-hidden="true"
+                />
+              </div>
+              <p className="mt-4 text-sm font-semibold">
+                {formatServiceDate(plan.weather?.serviceDate, index)}
+              </p>
+              <div className="mt-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="font-mono text-[9px] uppercase tracking-[.1em] text-text-2">
+                    Morning order · {recommendation?.name}
+                  </p>
+                  <p className="mt-1 font-serif text-4xl">
+                    {recommendation?.recommendedPrep ?? "—"}
+                    <span className="ml-2 font-grot text-xs text-text-2">
+                      {recommendation?.unit}
+                    </span>
+                  </p>
+                </div>
+                <p className="text-right font-mono text-[10px] text-text-2">
+                  <span className="text-text">
+                    {number.format(plan.result.effectiveCovers)} covers
+                  </span>
+                  <br />
+                  {plan.weather
+                    ? `${plan.weather.temperatureF}°F · ${plan.weather.rainProbability}% rain`
+                    : "Loading forecast"}
+                </p>
+              </div>
+              <div className="mt-5">
+                <div className="relative h-2 rounded-full bg-line/70">
+                  {distribution ? (
+                    <>
+                      <span
+                        className="absolute inset-y-0 rounded-full bg-ok/55"
+                        style={{ left: `${rangeLeft}%`, width: `${rangeWidth}%` }}
+                      />
+                      <span
+                        className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-ok bg-bg"
+                        style={{ left: `${position(distribution.p50)}%` }}
+                      />
+                    </>
+                  ) : null}
+                </div>
+                <div className="mt-2 flex justify-between font-mono text-[9px] text-text-2">
+                  <span>P10 {distribution?.p10 ?? "—"}</span>
+                  <span>Median {distribution?.p50 ?? "—"}</span>
+                  <span>P90 {distribution?.p90 ?? "—"}</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </fieldset>
+    </section>
+  );
+}
+
 function DemandDistribution({
   result,
   recommendation,
@@ -262,26 +414,35 @@ function DemandDistribution({
 
 export default function Home() {
   const [draft, setDraft] = useState(initialInputs);
-  const [weather, setWeather] = useState<WeatherSignal | null>(null);
+  const [weatherHorizon, setWeatherHorizon] = useState<WeatherSignal[]>([]);
   const [weatherError, setWeatherError] = useState(false);
   const [trends, setTrends] = useState<TrendsSignal>(localTrendsSnapshot);
   const [signals, setSignals] = useState({ weather: true, trends: true, events: true });
   const [decision, setDecision] = useState<JevDecision | null>(null);
   const [summary, setSummary] = useState<{ summary: string; source: string } | null>(null);
   const [deciding, setDeciding] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(0);
   const [selectedItem, setSelectedItem] = useState("gnocchi");
   const [trendsError, setTrendsError] = useState<string | null>(null);
-  const liveInputs = useMemo(
-    () => ({
-      ...draft,
-      weatherUplift: signals.weather ? (weather?.coverEffect ?? 0) : 0,
-      trendUplift: signals.trends ? trends.momentum : 0,
-      eventUplift: signals.events ? draft.eventUplift : 0,
-      seed: 42,
-    }),
-    [draft, signals, trends.momentum, weather?.coverEffect],
+  const horizonWeather = weatherHorizon.length > 0 ? weatherHorizon : EMPTY_WEATHER_HORIZON;
+  const horizonPlans = useMemo(
+    () =>
+      horizonWeather.map((weather, index) => {
+        const inputs: ScenarioInputs = {
+          ...draft,
+          weatherUplift: signals.weather ? (weather?.coverEffect ?? 0) : 0,
+          trendUplift: signals.trends ? trends.momentum : 0,
+          eventUplift: signals.events ? draft.eventUplift : 0,
+          seed: 42 + index,
+        };
+        return { weather, inputs, result: simulatePrep(inputs) };
+      }),
+    [draft, horizonWeather, signals, trends.momentum],
   );
-  const result = useMemo(() => simulatePrep(liveInputs), [liveInputs]);
+  const selectedPlan = horizonPlans[selectedDay] ?? horizonPlans[0];
+  const weather = selectedPlan?.weather ?? null;
+  const result = selectedPlan?.result ?? simulatePrep(initialInputs);
+  const selectedDateLabel = formatServiceDate(weather?.serviceDate, selectedDay);
   const savings = Math.max(0, result.baselineWasteCost - result.projectedWasteCost);
   const selectedRecommendation =
     result.recommendations.find((item) => item.id === selectedItem) ?? result.recommendations[0];
@@ -297,10 +458,10 @@ export default function Home() {
     )
       .then((response) => {
         if (!response.ok) throw new Error("Weather unavailable");
-        return response.json() as Promise<WeatherSignal>;
+        return response.json() as Promise<WeatherHorizon>;
       })
-      .then((signal) => {
-        setWeather(signal);
+      .then((horizon) => {
+        setWeatherHorizon(horizon.days);
         setWeatherError(false);
         setDecision(null);
         setSummary(null);
@@ -324,18 +485,14 @@ export default function Home() {
     setSummary(null);
   }
 
-  function activeInputs(seed: number): ScenarioInputs {
-    return {
-      ...draft,
-      weatherUplift: signals.weather ? (weather?.coverEffect ?? 0) : 0,
-      trendUplift: signals.trends ? trends.momentum : 0,
-      eventUplift: signals.events ? draft.eventUplift : 0,
-      seed,
-    };
+  function selectDay(index: number) {
+    setSelectedDay(index);
+    setDecision(null);
+    setSummary(null);
   }
 
   async function runScenario() {
-    const nextInputs = activeInputs(42);
+    const nextInputs = selectedPlan?.inputs ?? initialInputs;
     const nextResult = simulatePrep(nextInputs);
     setDeciding(true);
     try {
@@ -394,7 +551,7 @@ export default function Home() {
               <p className="font-mono text-[10px] uppercase tracking-[.2em] text-text-2">
                 Frontira × ITCHATHON
               </p>
-              <p className="font-grot text-sm font-semibold">Tomorrow&apos;s Prep Briefing</p>
+              <p className="font-grot text-sm font-semibold">Three-Day Morning Briefing</p>
             </div>
           </div>
           <div className="rounded-full border border-line px-3 py-1 font-mono text-[10px] uppercase tracking-[.14em] text-text-2">
@@ -415,8 +572,8 @@ export default function Home() {
               <em>not averages.</em>
             </h1>
             <p className="mt-5 max-w-sm text-sm leading-6 text-text-2">
-              Live signals reshape tonight&apos;s demand distribution. Ten thousand possible
-              services expose the waste and shortage tradeoff before the first knife is lifted.
+              Order fresh each morning with a three-service view. Ten thousand possible outcomes
+              expose the waste and shortage tradeoff before the first knife is lifted.
             </p>
           </section>
 
@@ -457,9 +614,9 @@ export default function Home() {
               </div>
             </div>
             <Button className="w-full" onClick={runScenario} disabled={deciding}>
-              {deciding ? "Jev is evaluating…" : "Run evidence simulation"}
+              {deciding ? "Jev is evaluating…" : "Evaluate selected day with Jev"}
             </Button>
-            <p data-ledger-message>Synthetic menu · ready for Adam&apos;s POS export</p>
+            <p data-ledger-message>Daily replenishment · zero carryover · synthetic menu</p>
           </section>
 
           {decision ? (
@@ -492,16 +649,23 @@ export default function Home() {
         </aside>
 
         <section className="space-y-5">
+          <ThreeDayRunway
+            plans={horizonPlans}
+            selectedItem={selectedItem}
+            selectedDay={selectedDay}
+            onSelect={selectDay}
+          />
+
           <div>
             <div className="mb-3 flex items-end justify-between gap-4">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[.2em] text-accent">
                   External signal board
                 </p>
-                <h2 className="mt-2 font-serif text-3xl">What changed tonight?</h2>
+                <h2 className="mt-2 font-serif text-3xl">What changes {selectedDateLabel}?</h2>
               </div>
               <p className="max-w-sm text-right text-xs leading-5 text-text-2">
-                Toggle any source off, rerun, and see its counterfactual effect on the prep sheet.
+                Toggle any source off and see its counterfactual effect immediately.
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
@@ -512,7 +676,7 @@ export default function Home() {
                 detail={
                   weather
                     ? `${weather.rainProbability}% rain · ${weather.windGustMph} mph gusts · ${weather.coverEffect}% cover effect · ${serviceLocation.latitude}, ${serviceLocation.longitude}`
-                    : "Fetching the 17:00–22:00 service window."
+                    : "Fetching three 17:00–22:00 service windows."
                 }
                 enabled={signals.weather}
                 onToggle={() => updateSignals({ ...signals, weather: !signals.weather })}
@@ -587,7 +751,7 @@ export default function Home() {
               [
                 "Items adjusted",
                 `${result.recommendations.filter((item) => item.recommendedPrep !== item.baselinePar).length}/${result.recommendations.length}`,
-                "tonight's prep sheet",
+                `${selectedDateLabel} prep sheet`,
               ],
             ].map(([label, value, note]) => (
               <article key={label} className="rounded-lg border border-line bg-bg-raised p-5">
@@ -606,7 +770,7 @@ export default function Home() {
                 <p className="font-mono text-[10px] uppercase tracking-[.2em] text-accent">
                   Recommended prep sheet
                 </p>
-                <h2 className="mt-2 font-serif text-3xl">Tonight&apos;s production plan</h2>
+                <h2 className="mt-2 font-serif text-3xl">{selectedDateLabel} production plan</h2>
               </div>
               <p className="font-mono text-[9px] uppercase tracking-[.12em] text-text-2">
                 Select a dish to explain its forecast

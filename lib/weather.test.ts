@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { summarizeWeather } from "./weather.ts";
+import { addDaysToIsoDate, summarizeWeather } from "./weather.ts";
+
+test("builds consecutive service dates across month boundaries", () => {
+  assert.equal(addDaysToIsoDate("2026-09-30", 1), "2026-10-01");
+  assert.equal(addDaysToIsoDate("2026-12-31", 1), "2027-01-01");
+});
 
 test("summarizes the restaurant dinner window", () => {
   const times = Array.from(

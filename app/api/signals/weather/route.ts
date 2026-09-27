@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { type OpenMeteoForecast, summarizeWeather } from "@/lib/weather";
+import {
+  addDaysToIsoDate,
+  type OpenMeteoForecast,
+  summarizeWeather,
+  type WeatherHorizon,
+} from "@/lib/weather";
 
 export const revalidate = 900;
 
@@ -18,9 +23,9 @@ export async function GET(request: Request) {
       .formatToParts(today)
       .map((part) => [part.type, part.value]),
   );
-  const serviceDate =
-    url.searchParams.get("serviceDate") ??
-    `${localDateParts.year}-${localDateParts.month}-${localDateParts.day}`;
+  const localToday = `${localDateParts.year}-${localDateParts.month}-${localDateParts.day}`;
+  const startDate = url.searchParams.get("serviceDate") ?? addDaysToIsoDate(localToday, 1);
+  const serviceDates = Array.from({ length: 3 }, (_, index) => addDaysToIsoDate(startDate, index));
 
   const endpoint = new URL("https://api.open-meteo.com/v1/forecast");
   endpoint.searchParams.set("latitude", String(latitude));
@@ -33,13 +38,20 @@ export async function GET(request: Request) {
   endpoint.searchParams.set("precipitation_unit", "inch");
   endpoint.searchParams.set("wind_speed_unit", "mph");
   endpoint.searchParams.set("timezone", "auto");
-  endpoint.searchParams.set("forecast_days", "3");
+  endpoint.searchParams.set("forecast_days", "4");
 
   try {
     const response = await fetch(endpoint, { next: { revalidate: 900 } });
     if (!response.ok) throw new Error(`Weather provider returned ${response.status}`);
     const forecast = (await response.json()) as OpenMeteoForecast;
-    return NextResponse.json(summarizeWeather(forecast, serviceDate));
+    const horizon: WeatherHorizon = {
+      source: "Open-Meteo",
+      latitude,
+      longitude,
+      timezone: forecast.timezone,
+      days: serviceDates.map((serviceDate) => summarizeWeather(forecast, serviceDate)),
+    };
+    return NextResponse.json(horizon);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Weather unavailable" },

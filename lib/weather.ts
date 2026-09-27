@@ -11,6 +11,14 @@ export type WeatherSignal = {
   confidence: number;
 };
 
+export type WeatherHorizon = {
+  source: "Open-Meteo";
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  days: WeatherSignal[];
+};
+
 export type OpenMeteoForecast = {
   timezone: string;
   hourly: {
@@ -26,6 +34,13 @@ const round = (value: number, digits = 1) => {
   const factor = 10 ** digits;
   return Math.round(value * factor) / factor;
 };
+
+export function addDaysToIsoDate(date: string, days: number) {
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day) throw new Error("Invalid ISO date");
+  const next = new Date(Date.UTC(year, month - 1, day + days));
+  return next.toISOString().slice(0, 10);
+}
 
 export function summarizeWeather(
   forecast: OpenMeteoForecast,
