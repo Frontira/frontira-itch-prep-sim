@@ -12,20 +12,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const latitude = Number(url.searchParams.get("latitude") ?? "37.7749");
   const longitude = Number(url.searchParams.get("longitude") ?? "-122.4194");
-  const today = new Date();
-  const localDateParts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Los_Angeles",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
-      .formatToParts(today)
-      .map((part) => [part.type, part.value]),
-  );
-  const localToday = `${localDateParts.year}-${localDateParts.month}-${localDateParts.day}`;
-  const startDate = url.searchParams.get("serviceDate") ?? addDaysToIsoDate(localToday, 1);
-  const serviceDates = Array.from({ length: 3 }, (_, index) => addDaysToIsoDate(startDate, index));
+  const requestedStartDate = url.searchParams.get("serviceDate");
 
   const endpoint = new URL("https://api.open-meteo.com/v1/forecast");
   endpoint.searchParams.set("latitude", String(latitude));
@@ -44,6 +31,21 @@ export async function GET(request: Request) {
     const response = await fetch(endpoint, { next: { revalidate: 900 } });
     if (!response.ok) throw new Error(`Weather provider returned ${response.status}`);
     const forecast = (await response.json()) as OpenMeteoForecast;
+    const localDateParts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: forecast.timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+        .formatToParts(new Date())
+        .map((part) => [part.type, part.value]),
+    );
+    const localToday = `${localDateParts.year}-${localDateParts.month}-${localDateParts.day}`;
+    const startDate = requestedStartDate ?? addDaysToIsoDate(localToday, 1);
+    const serviceDates = Array.from({ length: 3 }, (_, index) =>
+      addDaysToIsoDate(startDate, index),
+    );
     const horizon: WeatherHorizon = {
       source: "Open-Meteo",
       latitude,
