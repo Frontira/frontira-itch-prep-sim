@@ -16,11 +16,7 @@ export default function Home() {
       />
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-8rem)] max-w-6xl flex-col justify-between gap-16">
         <section className="max-w-3xl space-y-7">
-          <Pictogram
-            name="orchestration.workflow"
-            size={32}
-            className="text-[var(--lg-signal)]"
-          />
+          <Pictogram name="orchestration.workflow" size={32} className="text-[var(--lg-signal)]" />
           <p
             data-visual-accent
             className="font-mono text-xs uppercase tracking-[0.22em] text-[var(--lg-signal)]"

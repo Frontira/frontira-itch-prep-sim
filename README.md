@@ -17,6 +17,18 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Real restaurant connection
+
+The restaurant panel accepts a name and city or a Google Maps URL. With `APIFY_TOKEN`, it uses Apify Google Maps Scraper for both search and detail enrichment, so no Google Maps API key is required. If only `GOOGLE_MAPS_API_KEY` is configured, name search uses Google Places; detail enrichment still needs Apify. Put keys in local `.env.local` and the Vercel Preview environment. The app never sends a key to the browser. Each explicit name search is capped at five places with no detail/reviews; importing a selected place requests one detail record. This bounds, but does not eliminate, Apify charges. Do not expose the demo publicly without a persistent rate limit or access control.
+
+Selecting a place automatically imports its detail record and changes the three-day weather location. The public venue snapshot and operator-calibrated prep items are saved in browser storage so the next morning starts immediately, without another paid scrape; snapshots seven days or older show a refresh warning. Apify may add a seven-day dinner activity chart, published hours, price range, menu URL and review topics. The operator can tap a food-related review topic to rename the selected illustrative prep item, then set its orders per 100 covers, current par and waste cost. Review topics are not validated menu items or sales counts. When present, the selected weekday's activity becomes a bounded ±15% cover prior that can be toggled off. It is a relative Google Maps popularity measure, not observed covers or dish sales. Booked covers and the event input remain synthetic until restaurant-owned data is connected. The San Francisco Trends snapshot is excluded when a real venue is selected; import a venue-relevant Trends CSV to use search momentum again.
+
+The morning card puts all six prep quantities ahead of the detailed charts and exposes the operator's waste-versus-sellout preference as three presets. Presets change the simulation's target quantile; they are not learned cost-optimal policies. There is not yet a measured under-one-minute test against a clipboard par sheet.
+
+For the John’s Grill demo, its Google Maps Place ID loads six dish names checked against the restaurant’s [published January 2026 dinner menu](https://www.johnsgrill.com/menu/dinner-menu-1/). Apify supplies venue identity, hours and guest-mentioned topics, but did not expose popular times on the September 27 import. The scenario’s orders per 100 covers, current pars and waste costs are editable illustrative values, not John’s Grill sales or purchasing records. The three-day weather forecast comes from Open-Meteo for the restaurant’s coordinates.
+
+The John’s Grill connection can also run a bounded Jev dish-identification step. One typed batch compares up to twelve Apify review topics with the six published menu dishes, labels non-food topics, and sends low-confidence or unmatched topics for operator review. A match can focus its existing prep row; it does not change the assumed order share. This explicit action requires `JEV_API_KEY` in the server environment and never exposes that key to the browser. It does not invent menu items, infer sales from review counts, or validate that the published menu has not changed.
+
 ## Social preview ownership
 
 The scaffold includes canonical Open Graph and Twitter large-card metadata plus

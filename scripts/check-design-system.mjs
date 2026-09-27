@@ -1,5 +1,5 @@
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
 const require = createRequire(import.meta.url);
@@ -40,7 +40,7 @@ if (!globals.includes('@import "./design-system/app-components.css";')) {
   throw new Error("Frontira application components are not imported");
 }
 const componentCss = readFileSync("app/design-system/app-components.css", "utf8");
-for (const cssImport of ['./pictograms.css', './control-glyphs.css']) {
+for (const cssImport of ["./pictograms.css", "./control-glyphs.css"]) {
   if (!componentCss.includes(`@import "${cssImport}";`)) {
     throw new Error(`Frontira application components are missing ${cssImport}`);
   }
@@ -77,10 +77,7 @@ if (
   throw new Error("The vendored semantic icon manifests are incomplete");
 }
 
-for (const file of [
-  "app/design-system/iconography.tsx",
-  "components/ui/ledger-icon-slots.tsx",
-]) {
+for (const file of ["app/design-system/iconography.tsx", "components/ui/ledger-icon-slots.tsx"]) {
   if (!existsSync(file)) throw new Error(`Missing governed icon adapter: ${file}`);
 }
 
@@ -100,7 +97,9 @@ function inspectDirectory(directory) {
     }
     if (!sourceExtensions.has(path.extname(entry))) continue;
     for (const violation of findDirectIconProviderImports(readFileSync(file, "utf8"))) {
-      violations.push(`${relative}:${violation.line}:${violation.column} imports ${violation.specifier}`);
+      violations.push(
+        `${relative}:${violation.line}:${violation.column} imports ${violation.specifier}`,
+      );
     }
   }
 }
